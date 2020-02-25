@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const pool = require()
 
 /**
  * @api {get} /api/members Get Members
@@ -13,7 +14,6 @@ const router = require("express").Router();
  * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
  * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
  */
-
 router.get("/members", async (request, response) => {
   await response.status(200).json({
     type: "success",
@@ -38,5 +38,9 @@ router.get("/members", async (request, response) => {
     ]
   });
 });
+
+router.post("/members", async (request, response) => {
+  await pool.query
+})
 
 module.exports = router;
