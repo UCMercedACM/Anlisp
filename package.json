@@ -1,5 +1,5 @@
 {
-  "name": "Anlisp",
+  "name": "half-dome",
   "version": "1.1.0",
   "private": true,
   "description": "ACM UCM's Backend User Management API",
@@ -12,8 +12,8 @@
   "main": "src/server.js",
   "scripts": {
     "build": "babel src --out-dir dist",
-    "serve": "node dist/index.js NODE_ENV=development",
-    "start": "nodemon --exec babel-node src/server.js NODE_ENV=production",
+    "serve": "node dist/server.js NODE_ENV=production",
+    "start": "nodemon --exec babel-node src/server.js NODE_ENV=development",
     "reinstall": "rm -rf node_modules yarn.lock && yarn install"
   },
   "dependencies": {
