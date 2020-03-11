@@ -17,6 +17,7 @@
     "reinstall": "rm -rf node_modules yarn.lock && yarn install"
   },
   "dependencies": {
+    "bcrypt": "^4.0.1",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
     "chalk": "^3.0.0",
