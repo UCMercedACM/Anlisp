@@ -40,6 +40,7 @@ pool.on('error', (err, client) => {
 
 pool.query(`create table if not exists members (
   ID serial primary key not null,
+  student_id varchar(15) not null,
   first_name varchar(255) not null,
   last_name varchar(255) not null,
   email varchar(255) not null,
