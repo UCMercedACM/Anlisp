@@ -70,6 +70,7 @@ module.exports = {
         client.lastQuery = args;
         return query.apply(client, args);
       };
+
       // set a timeout of 5 seconds, after which we will log this client's last query
       const timeout = setTimeout(() => {
         console.error("A client has been checked out for more than 5 seconds!");
@@ -77,6 +78,7 @@ module.exports = {
           `The last executed query on this client was: ${client.lastQuery}`
         );
       }, 5000);
+
       const release = err => {
         // call the actual 'done' method, returning this client to the pool
         done(err);
@@ -85,6 +87,7 @@ module.exports = {
         // set the query method back to its old un-monkey-patched version
         client.query = query;
       };
+
       callback(err, client, release);
     });
   }

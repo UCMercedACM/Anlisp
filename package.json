@@ -12,8 +12,10 @@
   "main": "src/server.js",
   "scripts": {
     "build": "babel src --out-dir dist",
-    "serve": "node dist/server.js NODE_ENV=production",
-    "start": "nodemon --exec babel-node src/server.js NODE_ENV=development",
+    "serve:babel": "node dist/server.js NODE_ENV=production",
+    "start:babel": "nodemon --exec babel-node src/server.js NODE_ENV=development",
+    "serve": "node server.js NODE_ENV=production",
+    "start": "nodemon server.js NODE_ENV=development",
     "reinstall": "rm -rf node_modules yarn.lock && yarn install"
   },
   "dependencies": {
