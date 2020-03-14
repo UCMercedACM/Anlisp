@@ -1,8 +1,8 @@
 Promise = require("bluebird");
-import { app, port, chalk } from "./config";
+import { app, port, host, chalk } from "./config";
 
 // Listen to requests
-app.listen(port, () =>
+app.listen(port, host, () =>
   console.log(
     chalk.connected(
       `Example app listening on port ${port} in ${app.settings.env} mode!`

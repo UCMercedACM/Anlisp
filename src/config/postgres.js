@@ -1,5 +1,5 @@
-import { Pool } from "pg";
-import { pg } from "./variables";
+const { Pool } = require("pg");
+const { pg } = require("./variables");
 
 const pool = new Pool({
   connectionString: pg.connectionString
@@ -16,33 +16,35 @@ pool.on("error", (err, client) => {
 pool.connect().then(client => {
   return client
     .query(
-      `CREATE TABLE IF NOT EXISTS MEMBERS (
-        ID serial PRIMARY KEY NOT NULL,
-        student_id varchar(15) NOT NULL,
-        first_name varchar(255) NOT NULL,
-        last_name varchar(255) NOT NULL,
-        email varchar(255) NOT NULL,
-        year varchar(255),
+      `create table if not exists members (
+        ID serial primary key not null,
+        student_id varchar(15) not null,
+        first_name varchar(255) not null,
+        last_name varchar(255) not null,
+        email varchar(255) not null,
+        year varchar(30),
         github varchar(255),
         linkedin varchar(255),
+        personal_website varchar(255),
+        stackoverflow varchar(255),
         portfolium varchar(255),
         handshake varchar(255),
-        slack varchar(255),
-        discord varchar(255),
-        image varchar(255),
-        active BOOLEAN NOT NULL,
-        banned BOOLEAN NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      );`,
-      [1]
+        slack varchar(50),
+        discord varchar(50),
+        thumbnail varchar(50),
+        active boolean,
+        banned boolean,
+        privilege varchar(50),
+        created_at TIMESTAMPTZ default NOW()
+      );`
     )
     .then(res => {
       client.release();
-      console.log(res.rows[0]);
+      console.log(`Members table exists!`);
     })
     .catch(err => {
       client.release();
-      console.log(err.stack);
+      console.log(`Error: ${err.stack}`);
     });
 });
 
