@@ -5,9 +5,9 @@ import compress from "compression";
 import methodOverride from "method-override";
 import helmet from "helmet";
 import cors from "cors";
-import passport from "passport";
+// import passport from "passport";
 
-import { routes, error, rateLimiter } from "../api";
+import { routes } from "../api";
 import { logs } from "./variables";
 // import { strategies } from "./passport";
 
@@ -37,27 +37,27 @@ app.use(helmet());
 app.use(cors());
 
 // enable authentication
-app.use(passport.initialize());
+// app.use(passport.initialize());
 // passport.use('jwt', strategies.jwt);
 // passport.use('facebook', strategies.facebook);
 // passport.use('google', strategies.google);
 
 // mount docs route to express static
-app.use("/docs", express.static("docs"));
+// app.use("/docs", express.static("docs"));
 
 // enable rate limit
-app.use(rateLimiter());
+// app.use(rateLimiter());
 
 // mount api routes
-app.use("/api", routes);
+app.use("/api", routes.members);
 
 // if error is not an instanceOf APIError, convert it
-app.use(error.converter);
+// app.use(error.converter);
 
 // catch 404 and forward to error handler
-app.use(error.notFound);
+// app.use(error.notFound);
 
 // error handler, send stacktrace only during development
-app.use(error.handler);
+// app.use(error.handler);
 
 module.exports = app;

@@ -1,4 +1,4 @@
- import path from 'path';
+const path = require("path");
 
 // import .env variables
 require('dotenv-safe').config({
@@ -8,8 +8,9 @@ require('dotenv-safe').config({
 });
 
 module.exports = {
-  env: process.env.NODE_ENV || 3000,
-  port: process.env.PORT,
+  env: process.env.NODE_ENV,
+  port: process.env.PORT || 3000,
+  host: process.env.HOST || '0.0.0.0',
   jwtSecret: process.env.JWT_SECRET,
   jwtExpirationInterval: process.env.JWT_EXPIRATION_MINUTES,
   pg: {
