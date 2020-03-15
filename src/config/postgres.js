@@ -2,50 +2,29 @@ const { Pool } = require("pg");
 const { pg } = require("./variables");
 
 const pool = new Pool({
-  connectionString: pg.connectionString
+  connectionString: pg.connectionString,
+  application_name: 'Half Dome',
+  fallback_application_name: 'Members API Service',
+
+  // maximum number of clients the pool should contain
+  // by default this is set to 10.
+  max: 20,
+
+  // number of milliseconds a client must sit idle in the pool and not be checked out
+  // before it is disconnected from the backend and discarded
+  // default is 10000 (10 seconds) - set to 0 to disable auto-disconnection of idle clients
+  idleTimeoutMillis: 30000,
+
+  // number of milliseconds to wait before timing out when connecting a new client
+  // by default this is 0 which means no timeout
+  connectionTimeoutMillis: 2000,
 });
 
 // the pool will emit an error on behalf of any idle clients
 // it contains if a backend error or network partition happens
-pool.on("error", (err, client) => {
-  console.error("Unexpected error on idle client", err);
+pool.on("error", (error, client) => {
+  console.error("Unexpected error on idle client", error);
   process.exit(-1);
-});
-
-// Setup Members table if one has not been created yet
-pool.connect().then(client => {
-  return client
-    .query(
-      `create table if not exists members (
-        ID serial primary key not null,
-        student_id varchar(15) not null,
-        first_name varchar(255) not null,
-        last_name varchar(255) not null,
-        email varchar(255) not null,
-        year varchar(30),
-        github varchar(255),
-        linkedin varchar(255),
-        personal_website varchar(255),
-        stackoverflow varchar(255),
-        portfolium varchar(255),
-        handshake varchar(255),
-        slack varchar(50),
-        discord varchar(50),
-        thumbnail varchar(50),
-        active boolean,
-        banned boolean,
-        privilege varchar(50),
-        created_at TIMESTAMPTZ default NOW()
-      );`
-    )
-    .then(res => {
-      client.release();
-      console.log(`Members table exists!`);
-    })
-    .catch(err => {
-      client.release();
-      console.log(`Error: ${err.stack}`);
-    });
 });
 
 /**
@@ -58,14 +37,15 @@ pool.connect().then(client => {
 module.exports = {
   query: (text, params, callback) => {
     const start = Date.now();
-    return pool.query(text, params, (err, res) => {
+    return pool.query(text, params, (error, response) => {
       const duration = Date.now() - start;
-      console.log("executed query", { text, duration, rows: res.rowCount });
-      callback(err, res);
+      console.log(pool.totalCount);
+      console.log("executed query", { text, duration, response, rows: response ? response.rowCount : null, error });
+      callback(error, response);
     });
   },
   getClient: callback => {
-    pool.connect((err, client, done) => {
+    pool.connect((error, client, done) => {
       const query = client.query;
       // monkey patch the query method to keep track of the last query executed
       client.query = (...args) => {
@@ -81,16 +61,16 @@ module.exports = {
         );
       }, 5000);
 
-      const release = err => {
+      const release = error => {
         // call the actual 'done' method, returning this client to the pool
-        done(err);
+        done(error);
         // clear our timeout
         clearTimeout(timeout);
         // set the query method back to its old un-monkey-patched version
         client.query = query;
       };
 
-      callback(err, client, release);
+      callback(error, client, release);
     });
   }
 };
