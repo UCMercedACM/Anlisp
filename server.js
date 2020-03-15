@@ -37,11 +37,11 @@ app.listen(process.env.PORT || 3000, process.env.HOST || '0.0.0.0', () =>
   )
 );
 
-process.on("warning", error => {
-  console.warn(warning(`Express connection has occurred ${error} error!`));
-});
+// process.on("warning", error => {
+//   console.warn(warning(`Express connection has occurred ${error} error!`));
+// });
 
-process.on("exit", code => {
-  console.error(termination(`About to exit with code: ${code}`));
-  process.exit(0);
-});
+// process.on("exit", code => {
+//   console.error(termination(`About to exit with code: ${code}`));
+//   process.exit(0);
+// });
