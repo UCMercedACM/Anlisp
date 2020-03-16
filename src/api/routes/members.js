@@ -1,26 +1,16 @@
 const router = require("express").Router();
 const db = require("../../config/postgres");
+const jwt = require('jsonwebtoken');
+var { SHA3 } = require('sha3');
+var hash = new SHA3(512);
 
-// /**
-//  * @api {get} /api/members Get Members
-//  * @apiDescription Returns all Members
-//  * @apiVersion 1.0.0
-//  * @apiName Verify Member(s)
-//  * @apiGroup Member(s)
-//  * @apiPermission public
-//  *
-//  * @apiSuccess {Object[]} Returns user information.
-//  *
-//  * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
-//  * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
-//  */
-// router.all("/member", (request, response, next) => {
 //   db.query(`create table if not exists members (
 //     ID serial primary key not null,
 //     student_id varchar(15) not null,
 //     first_name varchar(255) not null,
 //     last_name varchar(255) not null,
 //     email varchar(255) not null,
+//     password varchar(255) not null,
 //     year varchar(30),
 //     github varchar(255),
 //     linkedin varchar(255),
@@ -35,13 +25,7 @@ const db = require("../../config/postgres");
 //     banned boolean,
 //     privilege varchar(50),
 //     created_at TIMESTAMPTZ default NOW()
-//   );`, [], (createTableError, createTableResponse) => {
-//     if (createTableError) {
-//       response.send(createTableError);
-//     }
-//     // response.redirect('/api/member');
-//   });
-// });
+
 
 /**
  * @api {get} /api/members Get Members
@@ -70,66 +54,100 @@ router.get("/member", async (request, response) => {
   );
 });
 
-/**
- * @api {get} /api/members Get Members
- * @apiDescription Returns all Members
- * @apiVersion 1.0.0
- * @apiName Verify Member(s)
- * @apiGroup Member(s)
- * @apiPermission public
- *
- * @apiSuccess {Object[]} Returns user information.
- *
- * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
- * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
- */
-router.post("/member", (request, response) => {
+router.get("/login", async (request, response) => {
+  var email = request.body.email;
+  hash.update(request.body.password);
+  hash.digest('hex');
+  var hashedPass = hash.digest();
+
+  // MAKE SURE TO: Check for valid email
   db.query(
-    "select student_id from members where student_id = $1;",
-    [request.body.studentId],
-    (selectError, selectResponse) => {
-      if (selectError) {
+    "SELECT * FROM MEMBERS WHERE email = $1",
+    [request.body.email],
+    (error, emailCheck) => {
+      if (error) {
+        response.status(500);
+      }
+      else if (emailCheck.rowCount == 0){
+        response.status(200).send("Email does not exist");
+      }
+      else {
+        if (emailCheck.fields[7] == hashedPass) {
+          response.status(200).send(emailCheck);
+        }
+        else {
+          response.status(200).send("Incorrect Password");
+        }
+      }
+    });
+});
+
+router.post("/signup", async (request, response) => {
+  // MAKE SURE TO: Check for valid email
+  db.query(
+    "SELECT COUNT(email) FROM MEMBERS WHERE email = $1",
+    [request.body.email],
+    (error, emailCheck) => {
+      if (error) {
+        response.status(500);
+      }
+      else if (emailCheck.rows[0] > 0){
+        response.status(200).send("Email already exists");
+      }
+    });
+
+  //VALIDATE STUDENT ID
+  db.query(
+    "SELECT COUNT(student_id) FROM MEMBERS WHERE student_id = $1",
+    [request.body.student_id],
+    (error, stuidCheck) => {
+      if (error) {
+        response.status(500);
+      }
+      else if (stuidCheck.rows[0] > 0){
+        response.status(200).send("Student ID already exists");
+      }
+    });
+
+  hash.update(request.body.password);
+  var hashedPass = hash.digest('hex');
+  
+
+  db.query(
+    "insert into members (student_id, first_name, last_name, email, password, year, github, linkedin, personal_website, stack_overflow, portfolium, handshake, slack, discord, thumbnail, active, banned, privilege) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) returning first_name;",
+    [
+      request.body.studentId,
+      request.body.firstName,
+      request.body.lastName,
+      request.body.email,
+      hashedPass,
+      request.body.year,
+      request.body.github,
+      request.body.linkedin,
+      request.body.personalWebsite,
+      request.body.stackOverflow,
+      request.body.portfolium,
+      request.body.handshake,
+      request.body.slack,
+      request.body.discord,
+      request.body.thumbnail,
+      request.body.active,
+      request.body.banned,
+      "member"
+    ],
+    (insertError, insertResponse) => {
+      if (insertError) {
         response.status(404);
       }
-      if (selectResponse.rowCount === 0) {
-        db.query(
-          "insert into members (student_id, first_name, last_name, email, year, github, linkedin, personal_website, stack_overflow, portfolium, handshake, slack, discord, thumbnail, active, banned, privilege) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) returning first_name;",
-          [
-            request.body.studentId,
-            request.body.firstName,
-            request.body.lastName,
-            request.body.email,
-            request.body.year,
-            request.body.github,
-            request.body.linkedin,
-            request.body.personalWebsite,
-            request.body.stackOverflow,
-            request.body.portfolium,
-            request.body.handshake,
-            request.body.slack,
-            request.body.discord,
-            request.body.thumbnail,
-            request.body.active,
-            request.body.banned,
-            "member"
-          ],
-          (insertError, insertResponse) => {
-            if (insertError) {
-              response.status(404);
-            }
 
-            console.log(insertResponse);
+      console.log(insertResponse);
 
-            response
-              .status(200)
-              .send(`Successfully inserted ${request.body.studentId}'s information!`);
-          }
-        );
-      } else {
-        response.status(200).send(`${request.body.studentId}'s information already exists`);
-      }
+      response
+        .status(200)
+        .send(`Successfully inserted ${request.body.studentId}'s information!`);
     }
   );
+
 });
 
 // export our router to be mounted by the parent application
