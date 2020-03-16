@@ -29,7 +29,7 @@ USER postgres
 RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createdb -O docker members &&\
-    psql --command "create table if not exists members (ID serial primary key not null, student_id varchar(15) not null, first_name varchar(255) not null, last_name varchar(255) not null, email varchar(255) not null, year varchar(30), github varchar(255), linkedin varchar(255), personal_website varchar(255), stack_overflow varchar(255), portfolium varchar(255), handshake varchar(255), slack varchar(50), discord varchar(50), thumbnail varchar(50), active boolean, banned boolean, privilege varchar(50), created_at TIMESTAMPTZ default NOW());"
+    psql --command "create table if not exists members (ID serial primary key not null, student_id varchar(15) not null, first_name varchar(255) not null, last_name varchar(255) not null, email varchar(255) not null, password varchar(255) not null, year varchar(30), github varchar(255), linkedin varchar(255), personal_website varchar(255), stack_overflow varchar(255), portfolium varchar(255), handshake varchar(255), slack varchar(50), discord varchar(50), thumbnail varchar(50), active boolean, banned boolean, privilege varchar(50), created_at TIMESTAMPTZ default NOW());"
 
 # Adjust PostgreSQL configuration so that remote connections to the
 # database are possible.
