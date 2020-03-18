@@ -7,4 +7,4 @@ ACM UCM's Backend User Management API
 ## Get Started
 
 Build the docker file `docker build -t half-dome:dev .`
-Run the docker file `ocker run -v ${PWD}:/app -v /app/node_modules -p 4201:4201 --rm --name half-dome half-dome:dev`
+Run the docker file `docker run -v ${PWD}:/app -v /app/node_modules -p 4201:4201 --rm --name half-dome half-dome:dev`

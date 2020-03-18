@@ -1,5 +1,5 @@
 # base image
-FROM node:12.2.0
+FROM node:12.16.1-alpine3.11
 
 # Create a directory where our app will be placed
 RUN mkdir -p /usr/src/app
@@ -11,7 +11,6 @@ WORKDIR /usr/src/app
 COPY package.json /usr/src/app
 
 # Install dependecies
-RUN npm i -g yarn
 RUN yarn install
 
 # Get all the code needed to run the app
