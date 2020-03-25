@@ -2,8 +2,6 @@ const router = require("express").Router();
 const db = require("../../config/postgres");
 const jwt = require('jsonwebtoken');
 const hash = require("../../config/variables").hash;
-// const { SHA3 } = require('sha3');
-// const hash = new SHA3(512);
 
 //   db.query(`create table if not exists members (
 //     ID serial primary key not null,
@@ -55,7 +53,8 @@ router.get("/member", async (request, response) => {
   );
 });
 
-router.get("/login", async (request, response) => {
+router.post("/login", async (request, response) => {
+  console.log(request.body)
   var email = request.body.email;
   hash.update(request.body.password);
   var hashedPass = hash.digest('hex');
@@ -77,14 +76,10 @@ router.get("/login", async (request, response) => {
           var token = jwt.sign({data: emailCheck.rows[0]}, "longpasswordfor31231435315checkingn92i43290stuff", {
             expiresIn: 86400 // expires in 24 hours
           });
-          console.log(hashedPass);
-          console.log(emailCheck.rows[0].password);
           response.status(200).send({auth: true, token: token});
         }
         else {
-          console.log(hashedPass);
-          console.log(emailCheck.rows[0].password);
-          response.status(200).send("Incorrect Password");
+          response.status(200).send({auth: false, error: "Incorrect Password"});
         }
       }
     });
