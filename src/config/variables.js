@@ -1,4 +1,5 @@
 const path = require("path");
+const { SHA3 } = require('sha3');
 
 // import .env variables
 require("dotenv-safe").config({
@@ -8,6 +9,7 @@ require("dotenv-safe").config({
 });
 
 module.exports = {
+  hash: new SHA3(512),
   env: process.env.NODE_ENV,
   port: process.env.PORT || 3000,
   host: process.env.HOST || "0.0.0.0",
