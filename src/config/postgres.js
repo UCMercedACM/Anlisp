@@ -20,6 +20,29 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
+const pgPoolWrapper = {
+  async connect() {
+      for (let nRetry = 1; ; nRetry++) {
+          try {
+              const client = await pgPool.connect();
+              if (nRetry > 1) {
+                  console.info('Now successfully connected to Postgres');
+              }
+              return client;
+          } catch (e) {
+              if (e.toString().includes('ECONNREFUSED') && nRetry < 5) {
+                  console.info('ECONNREFUSED connecting to Postgres, ' +
+                      'maybe container is not ready yet, will retry ' + nRetry);
+                  // Wait 1 second
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+              } else {
+                  throw e;
+              }
+          }
+      }
+  }
+};
+
 // the pool will emit an error on behalf of any idle clients
 // it contains if a backend error or network partition happens
 pool.on("error", (error, client) => {

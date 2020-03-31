@@ -16,6 +16,7 @@
     "start:babel": "nodemon --exec babel-node src/server.js NODE_ENV=development",
     "serve": "node server.js NODE_ENV=production",
     "start": "nodemon server.js NODE_ENV=development",
+    "docker": "node server.js",
     "reinstall": "rm -rf node_modules yarn.lock && yarn install"
   },
   "dependencies": {

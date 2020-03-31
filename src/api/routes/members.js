@@ -1,30 +1,7 @@
 const router = require("express").Router();
 const db = require("../../config/postgres");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const hash = require("../../config/variables").hash;
-
-//   db.query(`create table if not exists members (
-//     ID serial primary key not null,
-//     student_id varchar(15) not null,
-//     first_name varchar(255) not null,
-//     last_name varchar(255) not null,
-//     email varchar(255) not null,
-//     password varchar(255) not null,
-//     year varchar(30),
-//     github varchar(255),
-//     linkedin varchar(255),
-//     personal_website varchar(255),
-//     stackoverflow varchar(255),
-//     portfolium varchar(255),
-//     handshake varchar(255),
-//     slack varchar(50),
-//     discord varchar(50),
-//     thumbnail varchar(50),
-//     active boolean,
-//     banned boolean,
-//     privilege varchar(50),
-//     created_at TIMESTAMPTZ default NOW()
-
 
 /**
  * @api {get} /api/members Get Members
@@ -39,25 +16,25 @@ const hash = require("../../config/variables").hash;
  * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
  * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
  */
-router.get("/member", async (request, response) => {
+router.get("/member", (request, response) => {
   db.query(
     "SELECT * FROM MEMBERS WHERE email = $1",
     [request.query.email],
-    (error, res) => {
-      if (error) {
+    (selectError, selectResponse) => {
+      if (selectError) {
         response.status(404);
       }
 
-      response.status(200).send(res.rows[0]);
+      response.status(200).send(selectResponse);
     }
   );
 });
 
 router.post("/login", async (request, response) => {
-  console.log(request.body)
+  console.log(request.body);
   var email = request.body.email;
   hash.update(request.body.password);
-  var hashedPass = hash.digest('hex');
+  var hashedPass = hash.digest("hex");
   hash.reset();
 
   // MAKE SURE TO: Check for valid email
@@ -67,22 +44,26 @@ router.post("/login", async (request, response) => {
     (error, emailCheck) => {
       if (error) {
         response.status(500);
-      }
-      else if (emailCheck.rowCount == 0){
+      } else if (emailCheck.rowCount == 0) {
         response.status(200).send("Email does not exist");
-      }
-      else {
+      } else {
         if (emailCheck.rows[0].password == hashedPass) {
-          var token = jwt.sign({data: emailCheck.rows[0]}, "longpasswordfor31231435315checkingn92i43290stuff", {
-            expiresIn: 86400 // expires in 24 hours
-          });
-          response.status(200).send({auth: true, token: token});
-        }
-        else {
-          response.status(200).send({auth: false, error: "Incorrect Password"});
+          var token = jwt.sign(
+            { data: emailCheck.rows[0] },
+            "longpasswordfor31231435315checkingn92i43290stuff",
+            {
+              expiresIn: 86400 // expires in 24 hours
+            }
+          );
+          response.status(200).send({ auth: true, token: token });
+        } else {
+          response
+            .status(200)
+            .send({ auth: false, error: "Incorrect Password" });
         }
       }
-    });
+    }
+  );
 });
 
 router.post("/signup", async (request, response) => {
@@ -93,11 +74,11 @@ router.post("/signup", async (request, response) => {
     (error, emailCheck) => {
       if (error) {
         response.status(500);
-      }
-      else if (emailCheck.rows[0] > 0){
+      } else if (emailCheck.rows[0] > 0) {
         response.status(200).send("Email already exists");
       }
-    });
+    }
+  );
 
   //VALIDATE STUDENT ID
   db.query(
@@ -106,16 +87,15 @@ router.post("/signup", async (request, response) => {
     (error, stuidCheck) => {
       if (error) {
         response.status(500);
-      }
-      else if (stuidCheck.rows[0] > 0){
+      } else if (stuidCheck.rows[0] > 0) {
         response.status(200).send("Student ID already exists");
       }
-    });
+    }
+  );
 
   hash.update(request.body.password);
-  var hashedPass = hash.digest('hex');
+  var hashedPass = hash.digest("hex");
   hash.reset();
-  
 
   db.query(
     "insert into members (student_id, first_name, last_name, email, password, year, github, linkedin, personal_website, stack_overflow, portfolium, handshake, slack, discord, thumbnail, active, banned, privilege) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) returning first_name;",
@@ -151,7 +131,6 @@ router.post("/signup", async (request, response) => {
         .send(`Successfully inserted ${request.body.studentId}'s information!`);
     }
   );
-
 });
 
 // export our router to be mounted by the parent application
