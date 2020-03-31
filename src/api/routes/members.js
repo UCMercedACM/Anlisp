@@ -30,17 +30,17 @@ router.get("/member", (request, response) => {
   );
 });
 
-router.post("/login", async (request, response) => {
-  console.log(request.body);
-  var email = request.body.email;
-  hash.update(request.body.password);
+router.get("/login", async (request, response) => {
+  console.log(request.query);
+  var email = request.query.email;
+  hash.update(request.query.password);
   var hashedPass = hash.digest("hex");
   hash.reset();
 
   // MAKE SURE TO: Check for valid email
   db.query(
     "SELECT * FROM MEMBERS WHERE email = $1",
-    [request.body.email],
+    [request.query.email],
     (error, emailCheck) => {
       if (error) {
         response.status(500);
