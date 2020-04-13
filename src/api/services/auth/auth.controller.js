@@ -1,4 +1,5 @@
 const httpStatus = require("http-status");
+
 const service = require("./auth.service");
 
 /**
@@ -8,6 +9,7 @@ const service = require("./auth.service");
 exports.register = async (req, res, next) => {
   try {
     const response = await service.register(req.body);
+    console.log("response: ", response);
     return res.status(httpStatus.CREATED).json(response);
   } catch (error) {
     return next(error);
@@ -15,7 +17,7 @@ exports.register = async (req, res, next) => {
 };
 
 /**
- * Returns jwt token if valid membername and password is provided
+ * Returns jwt token if valid username and password is provided
  * @public
  */
 exports.login = async (req, res, next) => {
@@ -28,14 +30,14 @@ exports.login = async (req, res, next) => {
 };
 
 /**
- * login with an existing member or creates a new one if valid accessToken token
+ * login with an existing user or creates a new one if valid accessToken token
  * Returns jwt token
  * @public
  */
 exports.oAuth = async (req, res, next) => {
   try {
-    const { member } = req;
-    const response = await service.oAuth(member);
+    const { user } = req;
+    const response = await service.oAuth(user);
     return res.json(response);
   } catch (error) {
     return next(error);

@@ -1,7 +1,7 @@
 const httpStatus = require("http-status");
-const expressValidation = require("express-validation");
+
 const APIError = require("../utils/APIError");
-const { env } = require("../../config/vars");
+const { env } = require("../config/vars");
 
 /**
  * Error handler. Send stacktrace only during development
@@ -12,7 +12,7 @@ const handler = (err, req, res, next) => {
     code: err.status,
     message: err.message || httpStatus[err.status],
     errors: err.errors,
-    stack: err.stack
+    stack: err.stack,
   };
   if (env !== "development") {
     delete response.stack;
@@ -30,23 +30,11 @@ exports.handler = handler;
 exports.converter = (err, req, res, next) => {
   let convertedError = err;
 
-  if (err instanceof expressValidation.ValidationError) {
-    const errors = err.errors.map(e => ({
-      location: e.location,
-      messages: e.messages,
-      field: e.field[0]
-    }));
-    convertedError = new APIError({
-      message: "Validation Error",
-      errors,
-      status: err.status,
-      stack: err.stack
-    });
-  } else if (!(err instanceof APIError)) {
+  if (!(err instanceof APIError)) {
     convertedError = new APIError({
       message: err.message,
       status: err.status,
-      stack: err.stack
+      stack: err.stack,
     });
   }
   return handler(convertedError, req, res);
@@ -59,7 +47,7 @@ exports.converter = (err, req, res, next) => {
 exports.notFound = (req, res, next) => {
   const err = new APIError({
     message: "Not found",
-    status: httpStatus.NOT_FOUND
+    status: httpStatus.NOT_FOUND,
   });
   return handler(err, req, res);
 };
@@ -71,7 +59,7 @@ exports.notFound = (req, res, next) => {
 exports.rateLimitHandler = (req, res, next) => {
   const err = new APIError({
     message: "Rate limt exceeded, please try again later some time.",
-    status: httpStatus.TOO_MANY_REQUESTS
+    status: httpStatus.TOO_MANY_REQUESTS,
   });
   return handler(err, req, res);
 };

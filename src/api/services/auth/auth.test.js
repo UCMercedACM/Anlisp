@@ -3,8 +3,9 @@ const request = require("supertest");
 const httpStatus = require("http-status");
 const { expect } = require("chai");
 const sinon = require("sinon");
-const app = require("../../../index");
-const member = require("../member/member.model");
+
+const app = require("../../index");
+const User = require("../user/user.model");
 const RefreshToken = require("./refreshToken.model");
 const authProviders = require("../../utils/authProviders");
 
@@ -14,66 +15,66 @@ const fakeOAuthRequest = () =>
   Promise.resolve({
     service: "facebook",
     id: "123",
-    name: "member",
+    name: "user",
     email: "test@test.com",
-    picture: "test.jpg"
+    picture: "test.jpg",
   });
 
 describe("Authentication API", () => {
-  let dbmember;
-  let member;
+  let dbUser;
+  let user;
   let refreshToken;
 
   beforeEach(async () => {
-    dbmember = {
+    dbUser = {
       email: "branstark@gmail.com",
       password: "mypassword",
       name: "Bran Stark",
-      role: "admin"
+      role: "admin",
     };
 
-    member = {
+    user = {
       email: "sousa.dfs@gmail.com",
       password: "123456",
-      name: "Daniel Sousa"
+      name: "Daniel Sousa",
     };
 
     refreshToken = {
       token:
         "5947397b323ae82d8c3a333b.c69d0435e62c9f4953af912442a3d064e20291f0d228c0552ed4be473e7d191ba40b18c2c47e8b9d",
-      memberId: "5947397b323ae82d8c3a333b",
-      memberEmail: dbmember.email,
-      expires: new Date()
+      userId: "5947397b323ae82d8c3a333b",
+      userEmail: dbUser.email,
+      expires: new Date(),
     };
 
-    await member.remove({});
-    await member.create(dbmember);
+    await User.remove({});
+    await User.create(dbUser);
     await RefreshToken.remove({});
   });
 
   afterEach(() => sandbox.restore());
 
   describe("POST /v1/auth/register", () => {
-    it("should register a new member when request is ok", () => {
+    it("should register a new user when request is ok", () => {
       return request(app)
         .post("/v1/auth/register")
-        .send(member)
+        .send(user)
         .expect(httpStatus.CREATED)
-        .then(res => {
-          delete member.password;
+        .then((res) => {
+          delete user.password;
           expect(res.body.token).to.have.a.property("accessToken");
           expect(res.body.token).to.have.a.property("refreshToken");
           expect(res.body.token).to.have.a.property("expiresIn");
-          expect(res.body.member).to.include(member);
+          expect(res.body.user).to.include(user);
         });
     });
 
     it("should report error when email already exists", () => {
       return request(app)
         .post("/v1/auth/register")
-        .send(dbmember)
+        .send(dbUser)
         .expect(httpStatus.CONFLICT)
-        .then(res => {
+        .then((res) => {
           const { field } = res.body.errors[0];
           const { location } = res.body.errors[0];
           const { messages } = res.body.errors[0];
@@ -84,12 +85,12 @@ describe("Authentication API", () => {
     });
 
     it("should report error when the email provided is not valid", () => {
-      member.email = "this_is_not_an_email";
+      user.email = "this_is_not_an_email";
       return request(app)
         .post("/v1/auth/register")
-        .send(member)
+        .send(user)
         .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
+        .then((res) => {
           const { field } = res.body.errors[0];
           const { location } = res.body.errors[0];
           const { messages } = res.body.errors[0];
@@ -104,7 +105,7 @@ describe("Authentication API", () => {
         .post("/v1/auth/register")
         .send({})
         .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
+        .then((res) => {
           const { field } = res.body.errors[0];
           const { location } = res.body.errors[0];
           const { messages } = res.body.errors[0];
@@ -119,14 +120,14 @@ describe("Authentication API", () => {
     it("should return an accessToken and a refreshToken when email and password matches", () => {
       return request(app)
         .post("/v1/auth/login")
-        .send(dbmember)
+        .send(dbUser)
         .expect(httpStatus.OK)
-        .then(res => {
-          delete dbmember.password;
+        .then((res) => {
+          delete dbUser.password;
           expect(res.body.token).to.have.a.property("accessToken");
           expect(res.body.token).to.have.a.property("refreshToken");
           expect(res.body.token).to.have.a.property("expiresIn");
-          expect(res.body.member).to.include(dbmember);
+          expect(res.body.user).to.include(dbUser);
         });
     });
 
@@ -135,7 +136,7 @@ describe("Authentication API", () => {
         .post("/v1/auth/login")
         .send({})
         .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
+        .then((res) => {
           const { field } = res.body.errors[0];
           const { location } = res.body.errors[0];
           const { messages } = res.body.errors[0];
@@ -146,12 +147,12 @@ describe("Authentication API", () => {
     });
 
     it("should report error when the email provided is not valid", () => {
-      member.email = "this_is_not_an_email";
+      user.email = "this_is_not_an_email";
       return request(app)
         .post("/v1/auth/login")
-        .send(member)
+        .send(user)
         .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
+        .then((res) => {
           const { field } = res.body.errors[0];
           const { location } = res.body.errors[0];
           const { messages } = res.body.errors[0];
@@ -162,12 +163,12 @@ describe("Authentication API", () => {
     });
 
     it("should report error when email and password don't match", () => {
-      dbmember.password = "xxx";
+      dbUser.password = "xxx";
       return request(app)
         .post("/v1/auth/login")
-        .send(dbmember)
+        .send(dbUser)
         .expect(httpStatus.UNAUTHORIZED)
-        .then(res => {
+        .then((res) => {
           const { code } = res.body;
           const { message } = res.body;
           expect(code).to.be.equal(401);
@@ -177,33 +178,33 @@ describe("Authentication API", () => {
   });
 
   describe("POST /v1/auth/facebook", () => {
-    it("should create a new member and return an accessToken when member does not exist", () => {
+    it("should create a new user and return an accessToken when user does not exist", () => {
       sandbox.stub(authProviders, "facebook").callsFake(fakeOAuthRequest);
       return request(app)
         .post("/v1/auth/facebook")
         .send({ access_token: "123" })
         .expect(httpStatus.OK)
-        .then(res => {
+        .then((res) => {
           expect(res.body.token).to.have.a.property("accessToken");
           expect(res.body.token).to.have.a.property("refreshToken");
           expect(res.body.token).to.have.a.property("expiresIn");
-          expect(res.body.member).to.be.an("object");
+          expect(res.body.user).to.be.an("object");
         });
     });
 
-    it("should return an accessToken when member already exists", async () => {
-      dbmember.email = "test@test.com";
-      await member.create(dbmember);
+    it("should return an accessToken when user already exists", async () => {
+      dbUser.email = "test@test.com";
+      await User.create(dbUser);
       sandbox.stub(authProviders, "facebook").callsFake(fakeOAuthRequest);
       return request(app)
         .post("/v1/auth/facebook")
         .send({ access_token: "123" })
         .expect(httpStatus.OK)
-        .then(res => {
+        .then((res) => {
           expect(res.body.token).to.have.a.property("accessToken");
           expect(res.body.token).to.have.a.property("refreshToken");
           expect(res.body.token).to.have.a.property("expiresIn");
-          expect(res.body.member).to.be.an("object");
+          expect(res.body.user).to.be.an("object");
         });
     });
 
@@ -211,7 +212,7 @@ describe("Authentication API", () => {
       return request(app)
         .post("/v1/auth/facebook")
         .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
+        .then((res) => {
           const { field } = res.body.errors[0];
           const { location } = res.body.errors[0];
           const { messages } = res.body.errors[0];
@@ -223,33 +224,33 @@ describe("Authentication API", () => {
   });
 
   describe("POST /v1/auth/google", () => {
-    it("should create a new member and return an accessToken when member does not exist", () => {
+    it("should create a new user and return an accessToken when user does not exist", () => {
       sandbox.stub(authProviders, "google").callsFake(fakeOAuthRequest);
       return request(app)
         .post("/v1/auth/google")
         .send({ access_token: "123" })
         .expect(httpStatus.OK)
-        .then(res => {
+        .then((res) => {
           expect(res.body.token).to.have.a.property("accessToken");
           expect(res.body.token).to.have.a.property("refreshToken");
           expect(res.body.token).to.have.a.property("expiresIn");
-          expect(res.body.member).to.be.an("object");
+          expect(res.body.user).to.be.an("object");
         });
     });
 
-    it("should return an accessToken when member already exists", async () => {
-      dbmember.email = "test@test.com";
-      await member.create(dbmember);
+    it("should return an accessToken when user already exists", async () => {
+      dbUser.email = "test@test.com";
+      await User.create(dbUser);
       sandbox.stub(authProviders, "google").callsFake(fakeOAuthRequest);
       return request(app)
         .post("/v1/auth/google")
         .send({ access_token: "123" })
         .expect(httpStatus.OK)
-        .then(res => {
+        .then((res) => {
           expect(res.body.token).to.have.a.property("accessToken");
           expect(res.body.token).to.have.a.property("refreshToken");
           expect(res.body.token).to.have.a.property("expiresIn");
-          expect(res.body.member).to.be.an("object");
+          expect(res.body.user).to.be.an("object");
         });
     });
 
@@ -257,7 +258,7 @@ describe("Authentication API", () => {
       return request(app)
         .post("/v1/auth/google")
         .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
+        .then((res) => {
           const { field } = res.body.errors[0];
           const { location } = res.body.errors[0];
           const { messages } = res.body.errors[0];
@@ -273,9 +274,9 @@ describe("Authentication API", () => {
       await RefreshToken.create(refreshToken);
       return request(app)
         .post("/v1/auth/refresh-token")
-        .send({ email: dbmember.email, refreshToken: refreshToken.token })
+        .send({ email: dbUser.email, refreshToken: refreshToken.token })
         .expect(httpStatus.OK)
-        .then(res => {
+        .then((res) => {
           expect(res.body).to.have.a.property("accessToken");
           expect(res.body).to.have.a.property("refreshToken");
           expect(res.body).to.have.a.property("expiresIn");
@@ -286,9 +287,9 @@ describe("Authentication API", () => {
       await RefreshToken.create(refreshToken);
       return request(app)
         .post("/v1/auth/refresh-token")
-        .send({ email: member.email, refreshToken: refreshToken.token })
+        .send({ email: user.email, refreshToken: refreshToken.token })
         .expect(httpStatus.UNAUTHORIZED)
-        .then(res => {
+        .then((res) => {
           const { code } = res.body;
           const { message } = res.body;
           expect(code).to.be.equal(401);
@@ -301,7 +302,7 @@ describe("Authentication API", () => {
         .post("/v1/auth/refresh-token")
         .send({})
         .expect(httpStatus.BAD_REQUEST)
-        .then(res => {
+        .then((res) => {
           const field1 = res.body.errors[0].field;
           const location1 = res.body.errors[0].location;
           const messages1 = res.body.errors[0].messages;

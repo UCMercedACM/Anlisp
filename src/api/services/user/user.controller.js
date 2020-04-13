@@ -1,15 +1,16 @@
 const httpStatus = require("http-status");
-const service = require("./member.service");
+
+const service = require("./user.service");
 const { handler: errorHandler } = require("../../middlewares/error");
 
 /**
- * Load member and append to req.
+ * Load user and append to req.
  * @public
  */
 exports.load = async (req, res, next, id) => {
   try {
-    const member = await service.get(id);
-    req.locals = { member };
+    const user = await service.get(id);
+    req.locals = { user };
     return next();
   } catch (error) {
     return errorHandler(error, req, res);
@@ -17,19 +18,19 @@ exports.load = async (req, res, next, id) => {
 };
 
 /**
- * Get member
+ * Get user
  * @public
  */
-exports.get = (req, res) => res.json(req.locals.member.transform());
+exports.get = (req, res) => res.json(req.locals.user.transform());
 
 /**
- * Get logged in member info
+ * Get logged in user info
  * @public
  */
-exports.loggedIn = (req, res) => res.json(req.member.transform());
+exports.loggedIn = (req, res) => res.json(req.user.transform());
 
 /**
- * Create new member
+ * Create new user
  * @public
  */
 exports.create = async (req, res, next) => {
@@ -42,13 +43,13 @@ exports.create = async (req, res, next) => {
 };
 
 /**
- * Replace existing member
+ * Replace existing user
  * @public
  */
 exports.replace = async (req, res, next) => {
   try {
-    const { member } = req.locals;
-    const response = await service.replace(member, req.body);
+    const { user } = req.locals;
+    const response = await service.replace(user, req.body);
     return res.json(response);
   } catch (error) {
     return next(error);
@@ -56,13 +57,13 @@ exports.replace = async (req, res, next) => {
 };
 
 /**
- * Update existing member
+ * Update existing user
  * @public
  */
 exports.update = async (req, res, next) => {
   try {
-    const { member } = req.locals;
-    const response = await service.updateOne(member, req.body);
+    const { user } = req.locals;
+    const response = await service.update(user, req.body);
     return res.json(response);
   } catch (error) {
     return next(error);
@@ -70,7 +71,7 @@ exports.update = async (req, res, next) => {
 };
 
 /**
- * Get member list
+ * Get user list
  * @public
  */
 exports.list = async (req, res, next) => {
@@ -83,13 +84,13 @@ exports.list = async (req, res, next) => {
 };
 
 /**
- * Delete member
+ * Delete user
  * @public
  */
 exports.remove = async (req, res, next) => {
   try {
-    const { member } = req.locals;
-    await service.deleteOne(member);
+    const { user } = req.locals;
+    await service.remove(user);
     res.status(httpStatus.NO_CONTENT).end();
   } catch (error) {
     next(error);

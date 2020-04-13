@@ -1,18 +1,16 @@
 const path = require("path");
-const { SHA3 } = require('sha3');
 
 // import .env variables
 require("dotenv-safe").config({
   path: path.join(__dirname, "../../.env"),
   sample: path.join(__dirname, "../../.env.example"),
-  allowEmptyValues: true
 });
 
 module.exports = {
-  hash: new SHA3(512),
   env: process.env.NODE_ENV,
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 4201,
   host: process.env.HOST || "0.0.0.0",
+  port: process.env.PORT,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpirationInterval: process.env.JWT_EXPIRATION_MINUTES,
   pg: {
@@ -23,5 +21,5 @@ module.exports = {
   },
   logs: process.env.NODE_ENV === "production" ? "combined" : "dev",
   rateLimitTime: process.env.RATE_LIMIT_TIME,
-  rateLimitRequest: process.env.RATE_LIMIT_REQUEST
+  rateLimitRequest: process.env.RATE_LIMIT_REQUEST,
 };
