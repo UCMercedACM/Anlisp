@@ -26,7 +26,7 @@ function generateTokenResponse(user, accessToken) {
  */
 exports.register = async (userData) => {
   try {
-    const user = await new User(userData).save();
+    const user = await User.create(userData);
     console.log("user: ", user);
     const userTransformed = user.transform();
     const token = generateTokenResponse(user, user.token());
