@@ -158,11 +158,8 @@ const userSchema = sequelize.define(
         ];
 
         fields.forEach((field) => {
-          if (field === "joined") {
-            transformed[field] = user["created_at"];
-          } else {
-            transformed[field] = user[field];
-          }
+          transformed[field] =
+            field === "joined" ? user["created_at"] : user[field];
         });
 
         console.log("transformed: ", transformed);
