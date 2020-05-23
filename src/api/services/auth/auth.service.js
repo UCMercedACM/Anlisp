@@ -2,7 +2,7 @@ const moment = require("moment-timezone");
 
 const User = require("../user/user.model");
 const RefreshToken = require("./refreshToken.model");
-const { jwtExpirationInterval } = require("../../config/vars");
+const { jwtExpirationInterval } = require("../../../config/variables");
 
 /**
  * Returns a formated object with tokens
