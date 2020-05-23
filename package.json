@@ -32,7 +32,7 @@
     "name": "ACM UC Merced",
     "email": "acm@ucmerced.edu"
   },
-  "main": "src/server.js",
+  "main": "src/index.js",
   "scripts": {
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "postcoverage": "opn coverage/lcov-report/index.html",
@@ -41,7 +41,7 @@
     "lint:fix": "yarn lint -- --fix",
     "lint:watch": "yarn lint -- --watch",
     "precommit": "yarn lint",
-    "start": "node ./src/index.js NODE_ENV=development",
+    "start": "node ./src/index.js",
     "serve": "node ./src/index.js NODE_ENV=production",
     "test": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text -x '**/authProviders.js' -x '**/mongoose.js' mocha --timeout 20000 --recursive $(find src -name '*test.js') --exit",
     "test:integration": "cross-env NODE_ENV=test mocha --timeout 20000 src/api/tests/integration",
