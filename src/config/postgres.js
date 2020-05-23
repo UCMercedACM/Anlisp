@@ -1,29 +1,28 @@
 const { Sequelize } = require("sequelize");
 
-const { pg, env } = require("./vars");
+const { connected, termination } = require("./chalk");
+const { pg, env } = require("./variables");
 
 // set Sequelize Promise to Bluebird
 Sequelize.Promise = Promise;
 
 /**
- * Connect to mongo db
+ * Connect to postgres DB
  *
- * @returns {object} Mongoose connection
+ * @returns {object} Postgres connection
  * @public
  */
-exports.connect = () => {
-  const sequelize = new Sequelize(pg.connectionString, {
-    logging: env === "development" ? (...msg) => console.log(msg) : false,
+const sequelize = new Sequelize(pg.connectionString, {
+  logging: env === "development" ? (...msg) => console.log(msg) : false,
+});
+
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log(connected("Connection has been established successfully.")); // eslint-disable-line no-console
+  })
+  .catch((err) => {
+    console.error(termination(`Unable to connect to the database: ${err}`)); // eslint-disable-line no-console
   });
 
-  // // Exit application on error
-  // try {
-  //   await sequelize.authenticate();
-  //   console.log('Connection has been established successfully.');
-  // } catch (error) {
-  //   console.error('Unable to connect to the database:', error);
-  //   process.exit(-1);
-  // }
-
-  return sequelize;
-};
+module.exports = { sequelize };

@@ -6,9 +6,13 @@ const moment = require("moment-timezone");
 const jwt = require("jwt-simple");
 const uuidv4 = require("uuid/v4");
 
-const sequelize = require("../../../config/postgres");
+const { sequelize } = require("../../../config/postgres");
 const APIError = require("../../utils/APIError");
-const { env, jwtSecret, jwtExpirationInterval } = require("../../../config/vars");
+const {
+  env,
+  jwtSecret,
+  jwtExpirationInterval,
+} = require("../../../config/variables");
 
 /**
  * User Roles
@@ -287,31 +291,31 @@ const userSchema = sequelize.define(
  * - validations
  * - virtuals
  */
-userSchema.pre("save", async function save(next) {
-  try {
-    if (!this.isModified("password")) return next();
+// userSchema.pre("save", async function save(next) {
+//   try {
+//     if (!this.isModified("password")) return next();
 
-    const rounds = env === "test" ? 1 : 10;
+//     const rounds = env === "test" ? 1 : 10;
 
-    const hash = await bcrypt.hash(this.password, rounds);
-    this.password = hash;
+//     const hash = await bcrypt.hash(this.password, rounds);
+//     this.password = hash;
 
-    console.log("this: ", this.password);
+//     console.log("this: ", this.password);
 
-    return next();
-  } catch (error) {
-    return next(error);
-  }
-});
+//     return next();
+//   } catch (error) {
+//     return next(error);
+//   }
+// });
 
 /**
  * Statics
  */
-userSchema.statics = {
-  roles,
-};
+// userSchema.statics = {
+//   roles,
+// };
 
 /**
  * @typedef User
  */
-module.exports = userSchema;
+module.exports = { userSchema, roles };
