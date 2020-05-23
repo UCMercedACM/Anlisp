@@ -7,11 +7,11 @@ const cors = require("cors");
 const helmet = require("helmet");
 const passport = require("passport");
 
-const routes = require("../routes/v1");
+const routes = require("../api/routes/v1");
 const { logs } = require("./variables");
 const strategies = require("./passport");
-const error = require("../middlewares/error");
-const rateLimiter = require("../middlewares/rateLimiter");
+const error = require("../api/middlewares/error");
+const rateLimiter = require("../api/middlewares/rateLimiter");
 
 /**
  * Express instance
