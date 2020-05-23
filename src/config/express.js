@@ -49,7 +49,7 @@ passport.use("google", strategies.google);
 app.use(rateLimiter());
 
 // mount api v1 routes
-app.use("/v1", routes);
+app.use("/api", routes);
 
 // if error is not an instanceOf APIError, convert it.
 app.use(error.converter);

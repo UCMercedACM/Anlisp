@@ -1,6 +1,6 @@
 const moment = require("moment-timezone");
 
-const User = require("../user/user.model");
+const { userSchema } = require("../user/user.model");
 const RefreshToken = require("./refreshToken.model");
 const { jwtExpirationInterval } = require("../../../config/variables");
 
@@ -26,13 +26,13 @@ function generateTokenResponse(user, accessToken) {
  */
 exports.register = async (userData) => {
   try {
-    const user = await User.create(userData);
+    const user = await userSchema.create(userData);
     console.log("user: ", user);
     const userTransformed = user.transform();
     const token = generateTokenResponse(user, user.token());
     return { token, user: userTransformed };
   } catch (error) {
-    throw User.checkDuplicateEmail(error);
+    throw userSchema.checkDuplicateEmail(error);
   }
 };
 
@@ -42,7 +42,7 @@ exports.register = async (userData) => {
  */
 exports.login = async (userData) => {
   try {
-    const { user, accessToken } = await User.findAndGenerateToken(userData);
+    const { user, accessToken } = await userSchema.findAndGenerateToken(userData);
     const token = generateTokenResponse(user, accessToken);
     const userTransformed = user.transform();
     return { token, user: userTransformed };
@@ -77,7 +77,7 @@ exports.refresh = async ({ email, refreshToken }) => {
       userEmail: email,
       token: refreshToken,
     });
-    const { user, accessToken } = await User.findAndGenerateToken({
+    const { user, accessToken } = await userSchema.findAndGenerateToken({
       email,
       refreshObject,
     });
