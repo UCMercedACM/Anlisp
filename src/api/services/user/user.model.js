@@ -8,7 +8,7 @@ const uuidv4 = require("uuid/v4");
 
 const sequelize = require("../../../config/postgres");
 const APIError = require("../../utils/APIError");
-const { env, jwtSecret, jwtExpirationInterval } = require("../../config/vars");
+const { env, jwtSecret, jwtExpirationInterval } = require("../../../config/vars");
 
 /**
  * User Roles
