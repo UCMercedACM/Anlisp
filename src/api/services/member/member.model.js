@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
 
-const { Member } = require("./member.class");
+const Member = require("./member.class");
 const { sequelize } = require("../../../config/postgres");
 const { env } = require("../../../config/variables");
 
@@ -18,7 +18,7 @@ Member.init(
   {
     // attributes
     id: {
-      type: type.INTEGER,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
@@ -104,7 +104,7 @@ Member.init(
     // The name of the model. The model will be stored in `sequelize.models` under this name.
     // This defaults to class name i.e. Member in this case. This will control name of auto-generated
     // foreignKey and association naming
-    modelName: "member",
+    modelName: "Member",
 
     // define the table's name
     tableName: "members",

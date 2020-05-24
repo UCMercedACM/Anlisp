@@ -207,4 +207,4 @@ class Member extends Model {
 /**
  * @typedef Member
  */
-module.exports = { Member };
+module.exports = Member;

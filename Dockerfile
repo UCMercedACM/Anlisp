@@ -3,7 +3,7 @@ FROM node:12.16.1-alpine3.11
 
 LABEL maintainer="UCM ACM Chapter"
 LABEL maintainer.email="acm@ucmerced.edu"
-LABEL version="0.2.4"
+LABEL version="0.2.5"
 
 # use changes to package.json to force Docker not to use the cache
 # when we change our application's angular dependencies:
