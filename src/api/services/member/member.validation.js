@@ -3,7 +3,7 @@ const Joi = require("@hapi/joi");
 const User = require("./user.model");
 
 module.exports = {
-  // GET /v1/users
+  // GET /v1/members
   listUsers: {
     query: Joi.object({
       page: Joi.number().min(1),
@@ -14,7 +14,7 @@ module.exports = {
     }),
   },
 
-  // POST /v1/users
+  // POST /v1/members
   createUser: {
     body: Joi.object({
       email: Joi.string().email().required(),
@@ -24,7 +24,7 @@ module.exports = {
     }),
   },
 
-  // PUT /v1/users/:userId
+  // PUT /v1/members/:userId
   replaceUser: {
     body: Joi.object({
       email: Joi.string().email().required(),
@@ -39,7 +39,7 @@ module.exports = {
     }),
   },
 
-  // PATCH /v1/users/:userId
+  // PATCH /v1/members/:userId
   updateUser: {
     body: Joi.object({
       email: Joi.string().email(),

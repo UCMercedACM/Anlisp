@@ -1,6 +1,6 @@
 const express = require("express");
 
-const userRoutes = require("../../services/user/user.route");
+const memberRoutes = require("../../services/user/member.route");
 const authRoutes = require("../../services/auth/auth.route");
 
 const router = express.Router();
@@ -15,7 +15,7 @@ router.get("/status", (req, res) => res.send("OK"));
  */
 router.use("/docs", express.static("docs"));
 
-router.use("/members", userRoutes);
+router.use("/members", memberRoutes);
 router.use("/auth", authRoutes);
 
 module.exports = router;

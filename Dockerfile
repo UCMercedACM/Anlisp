@@ -3,22 +3,19 @@ FROM node:12.16.1-alpine3.11
 
 LABEL maintainer="UCM ACM Chapter"
 LABEL maintainer.email="acm@ucmerced.edu"
-LABEL version="0.2.2"
+LABEL version="0.2.4"
 
-# Create a directory where our app will be placed
-RUN mkdir -p /usr/src/app
+# use changes to package.json to force Docker not to use the cache
+# when we change our application's angular dependencies:
+COPY package.json /tmp/package.json
+RUN cd /tmp && yarn install --silent
+# RUN yarn global add --silent @angular/cli@8.3.14
+RUN mkdir -p /app && cp -a /tmp/node_modules /app/
 
-# Change directory so that our commands run inside this new directory
-WORKDIR /usr/src/app
-
-# Copy dependency definitions
-COPY package*.json /usr/src/app
-
-# Install dependecies
-RUN yarn install --silent
-
-# Get all the code needed to run the app
-COPY . /usr/src/app
+# From here we load our application's code in, therefore the previous docker
+# "layer" thats been cached will be used if possible
+WORKDIR /app
+COPY . /app
 
 # Expose the port the app runs in
 EXPOSE 4201:4201

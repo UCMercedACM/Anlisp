@@ -1,6 +1,3 @@
-// make bluebird default Promise
-Promise = require("bluebird"); // eslint-disable-line no-global-assign
-
 const { port, host, env } = require("./config/variables");
 const app = require("./config/express");
 const { connected, warning, termination } = require("./config/chalk");
