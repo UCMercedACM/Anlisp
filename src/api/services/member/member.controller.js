@@ -1,6 +1,6 @@
 const httpStatus = require("http-status");
 
-const service = require("./user.service");
+const service = require("./member.service");
 const { handler: errorHandler } = require("../../middlewares/error");
 
 /**

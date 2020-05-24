@@ -11,17 +11,22 @@ const { sequelize } = require("../../../config/postgres");
 const refreshTokenSchema = sequelize.define(
   "refreshTokens",
   {
+    id: {
+      type: type.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
     token: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    userId: {
+    memberId: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    userEmail: {
+    memberEmail: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
@@ -30,10 +35,6 @@ const refreshTokenSchema = sequelize.define(
     expires: { type: DataTypes.DATE },
   },
   {
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
-
     /**
      * Methods
      */
