@@ -36,10 +36,10 @@ exports.replace = async (member, newUserData) => {
   try {
     const newUser = new Member(newUserData);
     const ommitRole = member.role !== "admin" ? "role" : "";
-    const newUserObject = omit(newUser.toObject(), "_id", ommitRole);
+    const newUserObject = omit(newUser.toObject(), "id", ommitRole);
 
     await member.update(newUserObject, { override: true, upsert: true });
-    const savedUser = await Member.findById(member._id);
+    const savedUser = await Member.findById(member.id);
 
     return savedUser.transform();
   } catch (error) {
