@@ -43,7 +43,7 @@
     "precommit": "yarn lint",
     "start": "node ./src/index.js",
     "serve": "node ./src/index.js NODE_ENV=production",
-    "test": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text -x '**/authProviders.js' -x '**/mongoose.js' mocha --timeout 20000 --recursive $(find src -name '*test.js') --exit",
+    "test": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text -x '**/authProviders.js' -x '**/postgres.js' mocha --timeout 20000 --recursive $(find src -name '*test.js') --exit",
     "test:integration": "cross-env NODE_ENV=test mocha --timeout 20000 src/api/tests/integration",
     "test:unit": "cross-env NODE_ENV=test mocha src/api/tests/unit",
     "test:watch": "cross-env NODE_ENV=test mocha --watch src/api/tests/unit",

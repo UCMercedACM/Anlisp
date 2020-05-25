@@ -1,7 +1,31 @@
 const { DataTypes } = require("sequelize");
+const crypto = require("crypto");
+const moment = require("moment-timezone");
 
-const { sequelize } = require("../../../config/postgres");
-const RefreshToken = require("./refreshToken.class");
+const { sequelize, Model } = require("../../../config/postgres");
+
+class RefreshToken extends Model {
+  /**
+   * Generate a refresh token object and saves it into the database
+   *
+   * @param {Member} member
+   * @returns {RefreshToken}
+   */
+  generate(member) {
+    const memberId = member.id;
+    const userEmail = member.email;
+    const token = `${memberId}.${crypto.randomBytes(40).toString("hex")}`;
+    const expires = moment().add(30, "days").toDate();
+    const tokenObject = new RefreshToken({
+      token,
+      memberId,
+      userEmail,
+      expires,
+    });
+    tokenObject.save();
+    return tokenObject;
+  }
+}
 
 /**
  * Refresh Token Schema
@@ -9,22 +33,17 @@ const RefreshToken = require("./refreshToken.class");
  */
 RefreshToken.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
     token: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    memberId: {
+    member_id: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    memberEmail: {
+    member_email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
