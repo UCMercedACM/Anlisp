@@ -26,7 +26,7 @@ const sequelize = new Sequelize(pg.connectionString, {
     updatedAt: "updated_at",
 
     // And deletedAt to be called destroyed_at (remember to enable paranoid for this to work)
-    deletedAt: "destroyTime",
+    deletedAt: "destroyed_at",
 
     // don't delete database entries but set the newly added attribute deletedAt
     // to the current date (when deletion was done). paranoid will only work if

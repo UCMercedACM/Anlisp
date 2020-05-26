@@ -8,8 +8,8 @@ const uuidv4 = require("uuid/v4");
 
 const { sequelize, Model } = require("../../../config/postgres");
 const APIError = require("../../utils/APIError");
-// const { sequelize } = require("../../../config/postgres");
 const {
+  env,
   jwtSecret,
   jwtExpirationInterval,
 } = require("../../../config/variables");
@@ -27,10 +27,6 @@ const urlRegex = [
  * Create new Member Model
  */
 class Member extends Model {
-  getFullname() {
-    return `${this.first_name} ${this.last_name}`;
-  }
-
   /**
    * Get user
    *
@@ -41,7 +37,7 @@ class Member extends Model {
     try {
       let user;
 
-      if (DataTypes.UUID === typeof id) {
+      if (DataTypes.INTEGER === typeof id) {
         user = await this.findById(id).exec();
       }
 
@@ -61,20 +57,19 @@ class Member extends Model {
   /**
    * Transform Data
    */
-  transform() {
+  transform(member) {
     const transformed = {};
     const fields = [
-      "id",
       "student_id",
-      "firstName",
-      "lastName",
+      "first_name",
+      "last_name",
       "email",
       "password",
       "year",
       "github",
       "linkedin",
-      "personalWebsite",
-      "stackOverflow",
+      "personal_website",
+      "stack_overflow",
       "portfolium",
       "handshake",
       "slack",
@@ -87,27 +82,8 @@ class Member extends Model {
     ];
 
     fields.forEach((field) => {
-      switch (field) {
-        case "created_at": {
-          transformed[field] = this["created_at"];
-          break;
-        }
-        case "updated_at": {
-          transformed[field] = this["updated_at"];
-          break;
-        }
-        case "deleted_at": {
-          transformed[field] = this["deleted_at"];
-          break;
-        }
-        default: {
-          transformed[field] = this[field];
-          break;
-        }
-      }
+      transformed[field] = member[field === "joined" ? "created_at" : field];
     });
-
-    console.log("transformed: ", transformed);
 
     return transformed;
   }
@@ -241,18 +217,18 @@ Member.init(
     // attributes
     student_id: {
       type: DataTypes.STRING,
-      // allowNull: false,
+      allowNull: true,
       // unique: true,
       required: false,
     },
     first_name: {
       type: DataTypes.STRING,
-      // allowNull: false,
+      allowNull: true,
       required: false,
     },
     last_name: {
       type: DataTypes.STRING,
-      // allowNull: false,
+      allowNull: true,
       required: false,
     },
     email: {
@@ -268,59 +244,73 @@ Member.init(
     year: {
       type: DataTypes.STRING,
       required: false,
+      allowNull: true,
     },
     github: {
       type: DataTypes.STRING,
       is: urlRegex,
       required: false,
+      allowNull: true,
     },
     linkedin: {
       type: DataTypes.STRING,
       is: urlRegex,
       required: false,
+      allowNull: true,
     },
     personal_website: {
       type: DataTypes.STRING,
       is: urlRegex,
       required: false,
+      allowNull: true,
     },
     stack_overflow: {
       type: DataTypes.STRING,
       is: urlRegex,
       required: false,
+      allowNull: true,
     },
     portfolium: {
       type: DataTypes.STRING,
       is: urlRegex,
       required: false,
+      allowNull: true,
     },
     handshake: {
       type: DataTypes.STRING,
       is: urlRegex,
       required: false,
+      allowNull: true,
     },
     slack: {
       type: DataTypes.STRING,
       required: false,
+      allowNull: true,
     },
     discord: {
       type: DataTypes.STRING,
       required: false,
+      allowNull: true,
     },
     thumbnail: {
       type: DataTypes.BLOB,
+      allowNull: true,
+      required: false,
     },
     active: {
       type: DataTypes.BOOLEAN,
       required: false,
+      allowNull: true,
     },
     banned: {
       type: DataTypes.BOOLEAN,
       required: false,
+      allowNull: true,
     },
     privilege: {
       type: DataTypes.ENUM(...roles),
       required: false,
+      allowNull: true,
     },
   },
   {
@@ -336,28 +326,26 @@ Member.init(
     tableName: "members",
 
     comment: "Table contains all information on members",
+
+    hooks: {
+      /**
+       * Hash Password
+       *
+       * Storing passwords in plaintext in the database is terrible.
+       * Hashing the value with an appropriate cryptographic hash function is better.
+       */
+      // eslint-disable-next-line no-unused-vars
+      beforeCreate: async (memberInstance, _memberOptions) => {
+        memberInstance.dataValues.password = await bcrypt.hash(
+          memberInstance.dataValues.password,
+          env === "test" ? 1 : 10
+        );
+      },
+    },
   }
 );
 
-/**
- * Hash Password
- *
- * Storing passwords in plaintext in the database is terrible.
- * Hashing the value with an appropriate cryptographic hash function is better.
- */
-// Member.beforeCreate(async (memberInstance) => {
-//   memberInstance.password = await bcrypt.hash(
-//     memberInstance.password,
-//     env === "test" ? 1 : 10
-//   );
-// });
-
-// Member
-//   .create({ name: 'John Doe', title: 'senior engineer' })
-//   .then(employee => {
-//     console.log(employee.get('name')); // John Doe (SENIOR ENGINEER)
-//     console.log(employee.get('title')); // SENIOR ENGINEER
-//   })
+Member.sync({ force: env !== "production" });
 
 /**
  * @typedef Member

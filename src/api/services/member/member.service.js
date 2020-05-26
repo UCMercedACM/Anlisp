@@ -2,6 +2,8 @@ const { omit } = require("lodash");
 
 const { Member } = require("./member.model");
 
+const MemberInstance = new Member();
+
 /**
  * Get member
  * @public
@@ -22,7 +24,7 @@ exports.create = async (userData) => {
   try {
     const member = Member.build(userData);
     const savedUser = await member.save();
-    return Member.transform(savedUser);
+    return MemberInstance.transform(savedUser);
   } catch (error) {
     throw Member.checkDuplicateEmail(error);
   }
