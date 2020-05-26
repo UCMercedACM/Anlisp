@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 
 const { connected, termination } = require("./chalk");
-const { pg } = require("./variables");
+const { pg, env } = require("./variables");
 
 // set Sequelize Promise to Bluebird
 Sequelize.Promise = Promise;
@@ -13,7 +13,7 @@ Sequelize.Promise = Promise;
  * @public
  */
 const sequelize = new Sequelize(pg.connectionString, {
-  logging: env === "development" ? (...msg) => console.info(msg) : false,
+  logging: env === "debug" ? (...msg) => console.info(msg) : false,
   dialect: "postgres",
   define: {
     // don't forget to enable timestamps!
