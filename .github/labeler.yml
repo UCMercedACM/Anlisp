@@ -1,20 +1,11 @@
 # Add 'test' label to any change to *.spec.js files within the source directory
-test: 
-  - src/**/*.spec.js
+test:
+  - src/api/**/*.test.js
 
-# Add 'routing' label to any new or updated files within the routing directory
-routing:
-  - routes/*
-  
-# Add 'server' label for any changes to the main server.js or index files in sub folders
-server:
-  - server.js
-  - */**/index.js
-  
 # Add 'api' label to any new or updated files within the project
 api:
-  - *
+  - src/api/*
 
 # Add 'actions' label to any new or updated GitHub action workflow
-actions: 
-  - .github/workflows/*
+actions:
+  - .github/**/*.yml
