@@ -1,23 +1,33 @@
 const moment = require("moment-timezone");
 
-const { userSchema } = require("../user/user.model");
-const RefreshToken = require("./refreshToken.model");
+const { Member } = require("../member/member.model");
+const { RefreshToken } = require("./refreshToken.model");
 const { jwtExpirationInterval } = require("../../../config/variables");
+
+const MemberInstance = new Member();
+const refreshTokenInstance = new RefreshToken();
 
 /**
  * Returns a formated object with tokens
  * @private
  */
-function generateTokenResponse(user, accessToken) {
-  const tokenType = "Bearer";
-  const refreshToken = RefreshToken.generate(user).token;
-  const expiresIn = moment().add(jwtExpirationInterval, "minutes");
-  return {
-    tokenType,
-    accessToken,
-    refreshToken,
-    expiresIn,
-  };
+async function generateTokenResponse(member, accessToken) {
+  try {
+    const tokenType = "Bearer";
+    const tokenObject = await refreshTokenInstance.generate(member);
+    const tokenDataValues = tokenObject.dataValues;
+    const tokenData = await RefreshToken.create(tokenDataValues);
+    const expiresIn = moment().add(jwtExpirationInterval, "minutes");
+
+    return {
+      tokenType,
+      accessToken,
+      refreshToken: tokenData.token,
+      expiresIn,
+    };
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**
@@ -26,13 +36,14 @@ function generateTokenResponse(user, accessToken) {
  */
 exports.register = async (userData) => {
   try {
-    const user = await userSchema.create(userData);
-    console.log("user: ", user);
-    const userTransformed = user.transform();
-    const token = generateTokenResponse(user, user.token());
-    return { token, user: userTransformed };
+    const memberData = await Member.create(userData);
+    const member = memberData.dataValues;
+    const memberTransformed = MemberInstance.transform(member);
+    const token = await generateTokenResponse(member, MemberInstance.token());
+
+    return { token, member: memberTransformed };
   } catch (error) {
-    throw userSchema.checkDuplicateEmail(error);
+    throw MemberInstance.checkDuplicateEmail(error);
   }
 };
 
@@ -40,28 +51,31 @@ exports.register = async (userData) => {
  * Returns jwt token if valid username and password is provided
  * @public
  */
-exports.login = async (userData) => {
+exports.login = async (memberData) => {
   try {
-    const { user, accessToken } = await userSchema.findAndGenerateToken(userData);
-    const token = generateTokenResponse(user, accessToken);
-    const userTransformed = user.transform();
-    return { token, user: userTransformed };
+    const { member, accessToken } = await MemberInstance.findAndGenerateToken(
+      memberData
+    );
+    const memberTransformed = MemberInstance.transform(member);
+    const token = await generateTokenResponse(member, accessToken);
+
+    return { token, member: memberTransformed };
   } catch (error) {
     throw error;
   }
 };
 
 /**
- * login with an existing user or creates a new one if valid accessToken token
+ * login with an existing member or creates a new one if valid accessToken token
  * Returns jwt token
  * @public
  */
-exports.oAuth = async (user) => {
+exports.oAuth = async (member) => {
   try {
-    const accessToken = user.token();
-    const token = generateTokenResponse(user, accessToken);
-    const userTransformed = user.transform();
-    return { token, user: userTransformed };
+    const memberTransformed = MemberInstance.transform(member);
+    const token = generateTokenResponse(member, MemberInstance.token());
+
+    return { token, member: memberTransformed };
   } catch (error) {
     throw error;
   }
@@ -77,11 +91,12 @@ exports.refresh = async ({ email, refreshToken }) => {
       userEmail: email,
       token: refreshToken,
     });
-    const { user, accessToken } = await userSchema.findAndGenerateToken({
+    const { member, accessToken } = await Member.findAndGenerateToken({
       email,
       refreshObject,
     });
-    return generateTokenResponse(user, accessToken);
+
+    return generateTokenResponse(member, accessToken);
   } catch (error) {
     throw error;
   }
