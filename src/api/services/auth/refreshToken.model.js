@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const moment = require("moment-timezone");
 
 const { sequelize, Model } = require("../../../config/postgres");
+const { env } = require("../../../config/variables");
 
 class RefreshToken extends Model {
   /**
@@ -13,16 +14,15 @@ class RefreshToken extends Model {
    */
   generate(member) {
     const memberId = member.id;
-    const userEmail = member.email;
+    const memberEmail = member.email;
     const token = `${memberId}.${crypto.randomBytes(40).toString("hex")}`;
     const expires = moment().add(30, "days").toDate();
     const tokenObject = new RefreshToken({
       token,
-      memberId,
-      userEmail,
+      member_id: memberId,
+      member_email: memberEmail,
       expires,
     });
-    tokenObject.save();
     return tokenObject;
   }
 }
@@ -61,11 +61,13 @@ RefreshToken.init(
     modelName: "RefreshToken",
 
     // define the table's name
-    tableName: "refreshTokens",
+    tableName: "refresh_tokens",
 
     comment: "Table contains all refresh tokens",
   }
 );
+
+RefreshToken.sync({ force: env !== "production" });
 
 /**
  * @typedef RefreshToken

@@ -1,21 +1,26 @@
 const moment = require("moment-timezone");
 
 const { Member } = require("../member/member.model");
-const RefreshToken = require("./refreshToken.model");
+const { RefreshToken } = require("./refreshToken.model");
 const { jwtExpirationInterval } = require("../../../config/variables");
+
+const MemberInstance = new Member();
+const refreshTokenInstance = new RefreshToken();
 
 /**
  * Returns a formated object with tokens
  * @private
  */
-function generateTokenResponse(member, accessToken) {
+async function generateTokenResponse(member, accessToken) {
   const tokenType = "Bearer";
-  const refreshToken = RefreshToken.generate(member).token;
+  const tokenObject = refreshTokenInstance.generate(member);
+  const tokenDataValues = tokenObject.dataValues;
+  const tokenData = await RefreshToken.create(tokenDataValues);
   const expiresIn = moment().add(jwtExpirationInterval, "minutes");
   return {
     tokenType,
     accessToken,
-    refreshToken,
+    refreshToken: tokenData.token,
     expiresIn,
   };
 }
@@ -26,17 +31,14 @@ function generateTokenResponse(member, accessToken) {
  */
 exports.register = async (userData) => {
   try {
-    console.log("register data: ", userData);
-    const MemberInstance = new Member();
-    console.log(`member ${typeof Member} model: `, MemberInstance);
-    const member = await MemberInstance.create(userData);
-    console.log("member: ", member);
-    const userTransformed = MemberInstance.transform();
-    const token = generateTokenResponse(member, MemberInstance.token());
+    const memberData = await Member.create(userData);
+    const member = memberData.dataValues;
+    const userTransformed = MemberInstance.transform(member);
+    const token = await generateTokenResponse(member, MemberInstance.token());
     return { token, member: userTransformed };
   } catch (error) {
     console.error(error);
-    throw Member.checkDuplicateEmail(error);
+    throw MemberInstance.checkDuplicateEmail(error);
   }
 };
 
