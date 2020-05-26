@@ -12,17 +12,22 @@ const refreshTokenInstance = new RefreshToken();
  * @private
  */
 async function generateTokenResponse(member, accessToken) {
-  const tokenType = "Bearer";
-  const tokenObject = refreshTokenInstance.generate(member);
-  const tokenDataValues = tokenObject.dataValues;
-  const tokenData = await RefreshToken.create(tokenDataValues);
-  const expiresIn = moment().add(jwtExpirationInterval, "minutes");
-  return {
-    tokenType,
-    accessToken,
-    refreshToken: tokenData.token,
-    expiresIn,
-  };
+  try {
+    const tokenType = "Bearer";
+    const tokenObject = await refreshTokenInstance.generate(member);
+    const tokenDataValues = tokenObject.dataValues;
+    const tokenData = await RefreshToken.create(tokenDataValues);
+    const expiresIn = moment().add(jwtExpirationInterval, "minutes");
+
+    return {
+      tokenType,
+      accessToken,
+      refreshToken: tokenData.token,
+      expiresIn,
+    };
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**
@@ -33,11 +38,11 @@ exports.register = async (userData) => {
   try {
     const memberData = await Member.create(userData);
     const member = memberData.dataValues;
-    const userTransformed = MemberInstance.transform(member);
+    const memberTransformed = MemberInstance.transform(member);
     const token = await generateTokenResponse(member, MemberInstance.token());
-    return { token, member: userTransformed };
+
+    return { token, member: memberTransformed };
   } catch (error) {
-    console.error(error);
     throw MemberInstance.checkDuplicateEmail(error);
   }
 };
@@ -46,12 +51,15 @@ exports.register = async (userData) => {
  * Returns jwt token if valid username and password is provided
  * @public
  */
-exports.login = async (userData) => {
+exports.login = async (memberData) => {
   try {
-    const { member, accessToken } = await Member.findAndGenerateToken(userData);
-    const token = generateTokenResponse(member, accessToken);
-    const userTransformed = member.transform();
-    return { token, member: userTransformed };
+    const { member, accessToken } = await MemberInstance.findAndGenerateToken(
+      memberData
+    );
+    const memberTransformed = MemberInstance.transform(member);
+    const token = await generateTokenResponse(member, accessToken);
+
+    return { token, member: memberTransformed };
   } catch (error) {
     throw error;
   }
@@ -64,10 +72,10 @@ exports.login = async (userData) => {
  */
 exports.oAuth = async (member) => {
   try {
-    const accessToken = member.token();
-    const token = generateTokenResponse(member, accessToken);
-    const userTransformed = member.transform();
-    return { token, member: userTransformed };
+    const memberTransformed = MemberInstance.transform(member);
+    const token = generateTokenResponse(member, MemberInstance.token());
+
+    return { token, member: memberTransformed };
   } catch (error) {
     throw error;
   }
@@ -87,6 +95,7 @@ exports.refresh = async ({ email, refreshToken }) => {
       email,
       refreshObject,
     });
+
     return generateTokenResponse(member, accessToken);
   } catch (error) {
     throw error;

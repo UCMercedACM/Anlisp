@@ -41,12 +41,10 @@ RefreshToken.init(
     member_id: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     member_email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       is: /^\S+@\S+\.\S+$/i,
     },
     expires: { type: DataTypes.DATE },

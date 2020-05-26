@@ -13,7 +13,7 @@ Sequelize.Promise = Promise;
  * @public
  */
 const sequelize = new Sequelize(pg.connectionString, {
-  // logging: env === "development" ? (...msg) => console.log(msg) : false,
+  logging: env === "development" ? (...msg) => console.info(msg) : false,
   dialect: "postgres",
   define: {
     // don't forget to enable timestamps!
@@ -24,14 +24,6 @@ const sequelize = new Sequelize(pg.connectionString, {
 
     // I want updatedAt to actually be called updated_at
     updatedAt: "updated_at",
-
-    // And deletedAt to be called destroyed_at (remember to enable paranoid for this to work)
-    deletedAt: "destroyed_at",
-
-    // don't delete database entries but set the newly added attribute deletedAt
-    // to the current date (when deletion was done). paranoid will only work if
-    // timestamps are enabled
-    paranoid: true,
 
     // Will automatically set field option for all attributes to snake cased name.
     // Does not override attribute with field option already defined
