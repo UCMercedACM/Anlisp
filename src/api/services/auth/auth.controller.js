@@ -9,7 +9,6 @@ const service = require("./auth.service");
 exports.register = async (req, res, next) => {
   try {
     const response = await service.register(req.body);
-    console.log("response: ", response);
     return res.status(httpStatus.CREATED).json(response);
   } catch (error) {
     return next(error);
@@ -23,7 +22,7 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const response = await service.login(req.body);
-    return res.json(response);
+    return res.status(httpStatus.CREATED).json(response);
   } catch (error) {
     return next(error);
   }
@@ -38,7 +37,7 @@ exports.oAuth = async (req, res, next) => {
   try {
     const { user } = req;
     const response = await service.oAuth(user);
-    return res.json(response);
+    return res.status(httpStatus.OK).json(response);
   } catch (error) {
     return next(error);
   }
@@ -51,7 +50,7 @@ exports.oAuth = async (req, res, next) => {
 exports.refresh = async (req, res, next) => {
   try {
     const response = await service.refresh(req.body);
-    return res.json(response);
+    return res.status(httpStatus.CREATED).json(response);
   } catch (error) {
     return next(error);
   }

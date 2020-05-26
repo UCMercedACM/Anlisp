@@ -1,29 +1,61 @@
 const { Sequelize } = require("sequelize");
 
-const { pg, env } = require("./vars");
+const { connected, termination } = require("./chalk");
+const { pg, env } = require("./variables");
 
 // set Sequelize Promise to Bluebird
 Sequelize.Promise = Promise;
 
 /**
- * Connect to mongo db
+ * Connect to postgres DB
  *
- * @returns {object} Mongoose connection
+ * @returns {object} Postgres connection
  * @public
  */
-exports.connect = () => {
-  const sequelize = new Sequelize(pg.connectionString, {
-    logging: env === "development" ? (...msg) => console.log(msg) : false,
+const sequelize = new Sequelize(pg.connectionString, {
+  logging: env === "debug" ? (...msg) => console.info(msg) : false,
+  dialect: "postgres",
+  define: {
+    // don't forget to enable timestamps!
+    timestamps: true,
+
+    // I want createdAt to actually be called created_at
+    createdAt: "created_at",
+
+    // I want updatedAt to actually be called updated_at
+    updatedAt: "updated_at",
+
+    // Will automatically set field option for all attributes to snake cased name.
+    // Does not override attribute with field option already defined
+    underscored: true,
+
+    // disable the modification of table names; By default, sequelize will automatically
+    // transform all passed model names (first parameter of define) into plural.
+    // if you don't want that, set the following
+    freezeTableName: true,
+
+    // Enable optimistic locking.  When enabled, sequelize will add a version count attribute
+    // to the model and throw an OptimisticLockingError error when stale instances are saved.
+    // Set to true or a string with the attribute name you want to use to enable.
+    // version: true,
+  },
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
+});
+
+const Model = Sequelize.Model;
+
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log(connected("Connection has been established successfully.")); // eslint-disable-line no-console
+  })
+  .catch((err) => {
+    console.error(termination(`Unable to connect to the database: ${err}`)); // eslint-disable-line no-console
   });
 
-  // // Exit application on error
-  // try {
-  //   await sequelize.authenticate();
-  //   console.log('Connection has been established successfully.');
-  // } catch (error) {
-  //   console.error('Unable to connect to the database:', error);
-  //   process.exit(-1);
-  // }
-
-  return sequelize;
-};
+module.exports = { sequelize, Model };

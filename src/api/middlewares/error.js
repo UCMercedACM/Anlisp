@@ -1,7 +1,7 @@
 const httpStatus = require("http-status");
 
 const APIError = require("../utils/APIError");
-const { env } = require("../config/vars");
+const { env } = require("../../config/variables");
 
 /**
  * Error handler. Send stacktrace only during development

@@ -1,8 +1,8 @@
 {
   "name": "half-dome",
-  "version": "1.1.0",
+  "version": "0.2.7",
   "private": true,
-  "description": "ACM UCM's Backend User Management API",
+  "description": "ACM UC Merced's Backend User Management API",
   "keywords": [
     "API",
     "REST",
@@ -29,10 +29,10 @@
   },
   "license": "MIT",
   "author": {
-    "name": "ACM UCM",
+    "name": "ACM UC Merced",
     "email": "acm@ucmerced.edu"
   },
-  "main": "src/server.js",
+  "main": "src/index.js",
   "scripts": {
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "postcoverage": "opn coverage/lcov-report/index.html",
@@ -43,16 +43,16 @@
     "precommit": "yarn lint",
     "start": "node ./src/index.js",
     "serve": "node ./src/index.js NODE_ENV=production",
-    "test": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text -x '**/authProviders.js' -x '**/mongoose.js' mocha --timeout 20000 --recursive $(find src -name '*test.js') --exit",
+    "test": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text -x '**/authProviders.js' -x '**/postgres.js' mocha --timeout 20000 --recursive $(find src -name '*test.js') --exit",
     "test:integration": "cross-env NODE_ENV=test mocha --timeout 20000 src/api/tests/integration",
     "test:unit": "cross-env NODE_ENV=test mocha src/api/tests/unit",
     "test:watch": "cross-env NODE_ENV=test mocha --watch src/api/tests/unit",
     "validate": "yarn lint && yarn test"
   },
   "dependencies": {
+    "@hapi/joi": "16",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
-    "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
     "chalk": "^3.0.0",
     "compression": "^1.7.4",
@@ -60,11 +60,11 @@
     "cross-env": "^7.0.2",
     "dotenv-safe": "^8.2.0",
     "express": "^4.17.1",
+    "express-joi-validation": "^4.0.3",
     "express-rate-limit": "^5.1.1",
     "express-validation": "^3.0.2",
     "helmet": "^3.22.0",
     "http-status": "^1.4.2",
-    "joi": "^14.3.1",
     "jsonwebtoken": "^8.5.1",
     "jwt-simple": "^0.5.6",
     "lodash": "^4.17.15",
@@ -96,13 +96,13 @@
     "mocha": "^7.1.1",
     "nodemon": "^2.0.2",
     "nyc": "^15.0.0",
-    "opn-cli": "^5.0.0",
+    "open-cli": "^6.0.1",
     "sinon": "^9.0.1",
     "sinon-chai": "^3.5.0",
     "supertest": "^4.0.2"
   },
   "engines": {
-    "node": ">=10",
-    "yarn": "*"
+    "node": ">=12",
+    "yarn": ">=1.17"
   }
 }

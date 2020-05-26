@@ -3,8 +3,8 @@ const BearerStrategy = require("passport-http-bearer");
 const { ExtractJwt } = require("passport-jwt");
 
 const { jwtSecret } = require("./variables");
-const authProviders = require("../utils/authProviders");
-const User = require("../services/user/user.model");
+const authProviders = require("../api/utils/authProviders");
+const { Member } = require("../api/services/member/member.model");
 
 const jwtOptions = {
   secretOrKey: jwtSecret,
@@ -13,8 +13,8 @@ const jwtOptions = {
 
 const jwt = async (payload, done) => {
   try {
-    const user = await User.findById(payload.sub);
-    if (user) return done(null, user);
+    const member = await Member.findById(payload.sub);
+    if (member) return done(null, member);
     return done(null, false);
   } catch (error) {
     return done(error, false);
@@ -24,8 +24,8 @@ const jwt = async (payload, done) => {
 const oAuth = (service) => async (token, done) => {
   try {
     const userData = await authProviders[service](token);
-    const user = await User.oAuthLogin(userData);
-    return done(null, user);
+    const member = await Member.oAuthLogin(userData);
+    return done(null, member);
   } catch (err) {
     return done(err);
   }

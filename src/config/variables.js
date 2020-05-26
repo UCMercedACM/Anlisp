@@ -17,7 +17,7 @@ module.exports = {
     connectionString:
       process.env.NODE_ENV === "production"
         ? process.env.POSTGRES_URL
-        : `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_HOST}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DB}`
+        : `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_HOST}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DB}`,
   },
   logs: process.env.NODE_ENV === "production" ? "combined" : "dev",
   rateLimitTime: process.env.RATE_LIMIT_TIME,

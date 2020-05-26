@@ -1,7 +1,7 @@
 const RateLimit = require("express-rate-limit");
 
 const error = require("../middlewares/error");
-const { env, rateLimitTime, rateLimitRequest } = require("../config/vars");
+const { env, rateLimitTime, rateLimitRequest } = require("../../config/variables");
 
 module.exports = () => {
   if (env === "production") {

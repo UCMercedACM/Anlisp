@@ -1,36 +1,36 @@
 const Joi = require("@hapi/joi");
 
-const User = require("./user.model");
+const { roles } = require("./member.model");
 
 module.exports = {
-  // GET /v1/users
+  // GET /v1/members
   listUsers: {
     query: Joi.object({
       page: Joi.number().min(1),
       perPage: Joi.number().min(1).max(100),
       name: Joi.string(),
       email: Joi.string(),
-      role: Joi.string().valid(...User.roles),
+      role: Joi.string().valid(...roles),
     }),
   },
 
-  // POST /v1/users
+  // POST /v1/members
   createUser: {
     body: Joi.object({
       email: Joi.string().email().required(),
       password: Joi.string().min(6).max(128).required(),
-      name: Joi.string().max(128),
-      role: Joi.string().valid(...User.roles),
+      // name: Joi.string().max(128),
+      // role: Joi.string().valid(...roles),
     }),
   },
 
-  // PUT /v1/users/:userId
+  // PUT /v1/members/:userId
   replaceUser: {
     body: Joi.object({
       email: Joi.string().email().required(),
       password: Joi.string().min(6).max(128).required(),
       name: Joi.string().max(128),
-      role: Joi.string().valid(...User.roles),
+      role: Joi.string().valid(...roles),
     }),
     params: Joi.object({
       userId: Joi.string()
@@ -39,13 +39,13 @@ module.exports = {
     }),
   },
 
-  // PATCH /v1/users/:userId
+  // PATCH /v1/members/:userId
   updateUser: {
     body: Joi.object({
       email: Joi.string().email(),
       password: Joi.string().min(6).max(128),
       name: Joi.string().max(128),
-      role: Joi.string().valid(...User.roles),
+      role: Joi.string().valid(...roles),
     }),
     params: Joi.object({
       userId: Joi.string()
