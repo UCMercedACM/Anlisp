@@ -8,38 +8,38 @@ const bcrypt = require("bcryptjs");
 const { some, omitBy, isNil } = require("lodash");
 
 const app = require("../../index");
-const User = require("./user.model");
+const { Member } = require("./member.model");
 const JWT_EXPIRATION = require("../../config/vars").jwtExpirationInterval;
 
 /**
  * root level hooks
  */
 
-async function format(user) {
-  const formated = user;
+async function format(member) {
+  const formated = member;
 
   // delete password
   delete formated.password;
 
   // get users from database
-  const dbUser = (await User.findOne({ email: user.email })).transform();
+  const dbMember = (await Member.findOne({ email: member.email })).transform();
 
   // remove null and undefined properties
-  return omitBy(dbUser, isNil);
+  return omitBy(dbMember, isNil);
 }
 
 describe("Users API", async () => {
   let adminAccessToken;
   let userAccessToken;
-  let dbUsers;
-  let user;
+  let dbMembers;
+  let member;
   let admin;
 
   const password = "123456";
   const passwordHashed = await bcrypt.hash(password, 1);
 
   beforeEach(async () => {
-    dbUsers = {
+    dbMembers = {
       branStark: {
         email: "branstark@gmail.com",
         password: passwordHashed,
@@ -53,7 +53,7 @@ describe("Users API", async () => {
       },
     };
 
-    user = {
+    member = {
       email: "sousa.dfs@gmail.com",
       password,
       name: "Daniel Sousa",
@@ -66,18 +66,18 @@ describe("Users API", async () => {
       role: "admin",
     };
 
-    await User.remove({});
-    await User.insertMany([dbUsers.branStark, dbUsers.jonSnow]);
-    dbUsers.branStark.password = password;
-    dbUsers.jonSnow.password = password;
-    adminAccessToken = (await User.findAndGenerateToken(dbUsers.branStark))
+    await Member.remove({});
+    await Member.insertMany([dbMembers.branStark, dbMembers.jonSnow]);
+    dbMembers.branStark.password = password;
+    dbMembers.jonSnow.password = password;
+    adminAccessToken = (await Member.findAndGenerateToken(dbMembers.branStark))
       .accessToken;
-    userAccessToken = (await User.findAndGenerateToken(dbUsers.jonSnow))
+    userAccessToken = (await Member.findAndGenerateToken(dbMembers.jonSnow))
       .accessToken;
   });
 
   describe("POST /v1/users", () => {
-    it("should create a new user when request is ok", () => {
+    it("should create a new member when request is ok", () => {
       return request(app)
         .post("/v1/users")
         .set("Authorization", `Bearer ${adminAccessToken}`)
@@ -89,24 +89,24 @@ describe("Users API", async () => {
         });
     });
 
-    it('should create a new user and set default role to "user"', () => {
+    it('should create a new member and set default role to "member"', () => {
       return request(app)
         .post("/v1/users")
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.CREATED)
         .then((res) => {
-          expect(res.body.role).to.be.equal("user");
+          expect(res.body.role).to.be.equal("member");
         });
     });
 
     it("should report error when email already exists", () => {
-      user.email = dbUsers.branStark.email;
+      member.email = dbMembers.branStark.email;
 
       return request(app)
         .post("/v1/users")
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.CONFLICT)
         .then((res) => {
           const { field } = res.body.errors[0];
@@ -119,12 +119,12 @@ describe("Users API", async () => {
     });
 
     it("should report error when email is not provided", () => {
-      delete user.email;
+      delete member.email;
 
       return request(app)
         .post("/v1/users")
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.BAD_REQUEST)
         .then((res) => {
           const { field } = res.body.errors[0];
@@ -137,12 +137,12 @@ describe("Users API", async () => {
     });
 
     it("should report error when password length is less than 6", () => {
-      user.password = "12345";
+      member.password = "12345";
 
       return request(app)
         .post("/v1/users")
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.BAD_REQUEST)
         .then((res) => {
           const { field } = res.body.errors[0];
@@ -156,11 +156,11 @@ describe("Users API", async () => {
         });
     });
 
-    it("should report error when logged user is not an admin", () => {
+    it("should report error when logged member is not an admin", () => {
       return request(app)
         .post("/v1/users")
         .set("Authorization", `Bearer ${userAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.FORBIDDEN)
         .then((res) => {
           expect(res.body.code).to.be.equal(httpStatus.FORBIDDEN);
@@ -176,8 +176,8 @@ describe("Users API", async () => {
         .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(httpStatus.OK)
         .then(async (res) => {
-          const bran = format(dbUsers.branStark);
-          const john = format(dbUsers.jonSnow);
+          const bran = format(dbMembers.branStark);
+          const john = format(dbMembers.jonSnow);
 
           const includesBranStark = some(res.body, bran);
           const includesjonSnow = some(res.body, john);
@@ -200,8 +200,8 @@ describe("Users API", async () => {
         .query({ page: 2, perPage: 1 })
         .expect(httpStatus.OK)
         .then((res) => {
-          delete dbUsers.jonSnow.password;
-          const john = format(dbUsers.jonSnow);
+          delete dbMembers.jonSnow.password;
+          const john = format(dbMembers.jonSnow);
           const includesjonSnow = some(res.body, john);
 
           // before comparing it is necessary to convert String to Date
@@ -217,11 +217,11 @@ describe("Users API", async () => {
       return request(app)
         .get("/v1/users")
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .query({ email: dbUsers.jonSnow.email })
+        .query({ email: dbMembers.jonSnow.email })
         .expect(httpStatus.OK)
         .then((res) => {
-          delete dbUsers.jonSnow.password;
-          const john = format(dbUsers.jonSnow);
+          delete dbMembers.jonSnow.password;
+          const john = format(dbMembers.jonSnow);
           const includesjonSnow = some(res.body, john);
 
           // before comparing it is necessary to convert String to Date
@@ -258,7 +258,7 @@ describe("Users API", async () => {
         });
     });
 
-    it("should report error if logged user is not an admin", () => {
+    it("should report error if logged member is not an admin", () => {
       return request(app)
         .get("/v1/users")
         .set("Authorization", `Bearer ${userAccessToken}`)
@@ -271,43 +271,43 @@ describe("Users API", async () => {
   });
 
   describe("GET /v1/users/:userId", () => {
-    it("should get user", async () => {
-      const id = (await User.findOne({}))._id;
-      delete dbUsers.branStark.password;
+    it("should get member", async () => {
+      const id = (await Member.findOne({}))._id;
+      delete dbMembers.branStark.password;
 
       return request(app)
         .get(`/v1/users/${id}`)
         .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body).to.include(dbUsers.branStark);
+          expect(res.body).to.include(dbMembers.branStark);
         });
     });
 
-    it('should report error "User does not exist" when user does not exists', () => {
+    it('should report error "Member does not exist" when member does not exists', () => {
       return request(app)
         .get("/v1/users/56c787ccc67fc16ccc1a5e92")
         .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
           expect(res.body.code).to.be.equal(404);
-          expect(res.body.message).to.be.equal("User does not exist");
+          expect(res.body.message).to.be.equal("Member does not exist");
         });
     });
 
-    it('should report error "User does not exist" when id is not a valid ObjectID', () => {
+    it('should report error "Member does not exist" when id is not a valid ObjectID', () => {
       return request(app)
         .get("/v1/users/palmeiras1914")
         .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
           expect(res.body.code).to.be.equal(404);
-          expect(res.body.message).to.equal("User does not exist");
+          expect(res.body.message).to.equal("Member does not exist");
         });
     });
 
-    it("should report error when logged user is not the same as the requested one", async () => {
-      const id = (await User.findOne({ email: dbUsers.branStark.email }))._id;
+    it("should report error when logged member is not the same as the requested one", async () => {
+      const id = (await Member.findOne({ email: dbMembers.branStark.email }))._id;
 
       return request(app)
         .get(`/v1/users/${id}`)
@@ -321,30 +321,30 @@ describe("Users API", async () => {
   });
 
   describe("PUT /v1/users/:userId", () => {
-    it("should replace user", async () => {
-      delete dbUsers.branStark.password;
-      const id = (await User.findOne(dbUsers.branStark))._id;
+    it("should replace member", async () => {
+      delete dbMembers.branStark.password;
+      const id = (await Member.findOne(dbMembers.branStark))._id;
 
       return request(app)
         .put(`/v1/users/${id}`)
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.OK)
         .then((res) => {
-          delete user.password;
-          expect(res.body).to.include(user);
-          expect(res.body.role).to.be.equal("user");
+          delete member.password;
+          expect(res.body).to.include(member);
+          expect(res.body.role).to.be.equal("member");
         });
     });
 
     it("should report error when email is not provided", async () => {
-      const id = (await User.findOne({}))._id;
-      delete user.email;
+      const id = (await Member.findOne({}))._id;
+      delete member.email;
 
       return request(app)
         .put(`/v1/users/${id}`)
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.BAD_REQUEST)
         .then((res) => {
           const { field } = res.body.errors[0];
@@ -356,14 +356,14 @@ describe("Users API", async () => {
         });
     });
 
-    it("should report error user when password length is less than 6", async () => {
-      const id = (await User.findOne({}))._id;
-      user.password = "12345";
+    it("should report error member when password length is less than 6", async () => {
+      const id = (await Member.findOne({}))._id;
+      member.password = "12345";
 
       return request(app)
         .put(`/v1/users/${id}`)
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.BAD_REQUEST)
         .then((res) => {
           const { field } = res.body.errors[0];
@@ -377,19 +377,19 @@ describe("Users API", async () => {
         });
     });
 
-    it('should report error "User does not exist" when user does not exists', () => {
+    it('should report error "Member does not exist" when member does not exists', () => {
       return request(app)
         .put("/v1/users/palmeiras1914")
         .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
           expect(res.body.code).to.be.equal(404);
-          expect(res.body.message).to.be.equal("User does not exist");
+          expect(res.body.message).to.be.equal("Member does not exist");
         });
     });
 
-    it("should report error when logged user is not the same as the requested one", async () => {
-      const id = (await User.findOne({ email: dbUsers.branStark.email }))._id;
+    it("should report error when logged member is not the same as the requested one", async () => {
+      const id = (await Member.findOne({ email: dbMembers.branStark.email }))._id;
 
       return request(app)
         .put(`/v1/users/${id}`)
@@ -401,8 +401,8 @@ describe("Users API", async () => {
         });
     });
 
-    it("should not replace the role of the user (not admin)", async () => {
-      const id = (await User.findOne({ email: dbUsers.jonSnow.email }))._id;
+    it("should not replace the role of the member (not admin)", async () => {
+      const id = (await Member.findOne({ email: dbMembers.jonSnow.email }))._id;
       const role = "admin";
 
       return request(app)
@@ -416,13 +416,13 @@ describe("Users API", async () => {
     });
 
     it("should not assign the already existing email", async () => {
-      delete dbUsers.branStark.password;
-      const id = (await User.findOne(dbUsers.branStark))._id;
-      user.email = dbUsers.jonSnow.email;
+      delete dbMembers.branStark.password;
+      const id = (await Member.findOne(dbMembers.branStark))._id;
+      member.email = dbMembers.jonSnow.email;
       return request(app)
         .put(`/v1/users/${id}`)
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.CONFLICT)
         .then((res) => {
           const { field } = res.body.errors[0];
@@ -436,10 +436,10 @@ describe("Users API", async () => {
   });
 
   describe("PATCH /v1/users/:userId", () => {
-    it("should update user", async () => {
-      delete dbUsers.branStark.password;
-      const id = (await User.findOne(dbUsers.branStark))._id;
-      const { name } = user;
+    it("should update member", async () => {
+      delete dbMembers.branStark.password;
+      const id = (await Member.findOne(dbMembers.branStark))._id;
+      const { name } = member;
 
       return request(app)
         .patch(`/v1/users/${id}`)
@@ -448,13 +448,13 @@ describe("Users API", async () => {
         .expect(httpStatus.OK)
         .then((res) => {
           expect(res.body.name).to.be.equal(name);
-          expect(res.body.email).to.be.equal(dbUsers.branStark.email);
+          expect(res.body.email).to.be.equal(dbMembers.branStark.email);
         });
     });
 
-    it("should not update user when no parameters were given", async () => {
-      delete dbUsers.branStark.password;
-      const id = (await User.findOne(dbUsers.branStark))._id;
+    it("should not update member when no parameters were given", async () => {
+      delete dbMembers.branStark.password;
+      const id = (await Member.findOne(dbMembers.branStark))._id;
 
       return request(app)
         .patch(`/v1/users/${id}`)
@@ -462,23 +462,23 @@ describe("Users API", async () => {
         .send()
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body).to.include(dbUsers.branStark);
+          expect(res.body).to.include(dbMembers.branStark);
         });
     });
 
-    it('should report error "User does not exist" when user does not exists', () => {
+    it('should report error "Member does not exist" when member does not exists', () => {
       return request(app)
         .patch("/v1/users/palmeiras1914")
         .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
           expect(res.body.code).to.be.equal(404);
-          expect(res.body.message).to.be.equal("User does not exist");
+          expect(res.body.message).to.be.equal("Member does not exist");
         });
     });
 
-    it("should report error when logged user is not the same as the requested one", async () => {
-      const id = (await User.findOne({ email: dbUsers.branStark.email }))._id;
+    it("should report error when logged member is not the same as the requested one", async () => {
+      const id = (await Member.findOne({ email: dbMembers.branStark.email }))._id;
 
       return request(app)
         .patch(`/v1/users/${id}`)
@@ -490,8 +490,8 @@ describe("Users API", async () => {
         });
     });
 
-    it("should not update the role of the user (not admin)", async () => {
-      const id = (await User.findOne({ email: dbUsers.jonSnow.email }))._id;
+    it("should not update the role of the member (not admin)", async () => {
+      const id = (await Member.findOne({ email: dbMembers.jonSnow.email }))._id;
       const role = "admin";
 
       return request(app)
@@ -505,13 +505,13 @@ describe("Users API", async () => {
     });
 
     it("should not assign the already existing email", async () => {
-      delete dbUsers.branStark.password;
-      const id = (await User.findOne(dbUsers.branStark))._id;
-      user.email = dbUsers.jonSnow.email;
+      delete dbMembers.branStark.password;
+      const id = (await Member.findOne(dbMembers.branStark))._id;
+      member.email = dbMembers.jonSnow.email;
       return request(app)
         .patch(`/v1/users/${id}`)
         .set("Authorization", `Bearer ${adminAccessToken}`)
-        .send(user)
+        .send(member)
         .expect(httpStatus.CONFLICT)
         .then((res) => {
           const { field } = res.body.errors[0];
@@ -525,8 +525,8 @@ describe("Users API", async () => {
   });
 
   describe("DELETE /v1/users", () => {
-    it("should delete user", async () => {
-      const id = (await User.findOne({}))._id;
+    it("should delete member", async () => {
+      const id = (await Member.findOne({}))._id;
 
       return request(app)
         .delete(`/v1/users/${id}`)
@@ -534,24 +534,24 @@ describe("Users API", async () => {
         .expect(httpStatus.NO_CONTENT)
         .then(() => request(app).get("/v1/users"))
         .then(async () => {
-          const users = await User.find({});
+          const users = await Member.find({});
           expect(users).to.have.lengthOf(1);
         });
     });
 
-    it('should report error "User does not exist" when user does not exists', () => {
+    it('should report error "Member does not exist" when member does not exists', () => {
       return request(app)
         .delete("/v1/users/palmeiras1914")
         .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
           expect(res.body.code).to.be.equal(404);
-          expect(res.body.message).to.be.equal("User does not exist");
+          expect(res.body.message).to.be.equal("Member does not exist");
         });
     });
 
-    it("should report error when logged user is not the same as the requested one", async () => {
-      const id = (await User.findOne({ email: dbUsers.branStark.email }))._id;
+    it("should report error when logged member is not the same as the requested one", async () => {
+      const id = (await Member.findOne({ email: dbMembers.branStark.email }))._id;
 
       return request(app)
         .delete(`/v1/users/${id}`)
@@ -565,15 +565,15 @@ describe("Users API", async () => {
   });
 
   describe("GET /v1/users/profile", () => {
-    it("should get the logged user's info", () => {
-      delete dbUsers.jonSnow.password;
+    it("should get the logged member's info", () => {
+      delete dbMembers.jonSnow.password;
 
       return request(app)
         .get("/v1/users/profile")
         .set("Authorization", `Bearer ${userAccessToken}`)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body).to.include(dbUsers.jonSnow);
+          expect(res.body).to.include(dbMembers.jonSnow);
         });
     });
 
@@ -581,7 +581,7 @@ describe("Users API", async () => {
       // fake time
       const clock = sinon.useFakeTimers();
       const expiredAccessToken = (
-        await User.findAndGenerateToken(dbUsers.branStark)
+        await Member.findAndGenerateToken(dbMembers.branStark)
       ).accessToken;
 
       // move clock forward by minutes set in config + 1 minute
