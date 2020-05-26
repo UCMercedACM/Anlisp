@@ -108,25 +108,19 @@ class Member extends Model {
    * @returns {Error|APIError}
    */
   checkDuplicateEmail(error) {
-    if (
-      error.code === 11000 &&
-      (error.name === "BulkWriteError" || error.name === "MongoError")
-    ) {
-      return new APIError({
-        message: "Validation Error",
-        errors: [
-          {
-            field: "email",
-            location: "body",
-            messages: ['"email" already exists'],
-          },
-        ],
-        status: httpStatus.CONFLICT,
-        isPublic: true,
-        stack: error.stack,
-      });
-    }
-    return error;
+    return new APIError({
+      message: "Validation Error",
+      errors: [
+        {
+          field: "email",
+          location: "body",
+          messages: ["email already exists"],
+        },
+      ],
+      status: httpStatus.CONFLICT,
+      isPublic: true,
+      stack: error.stack,
+    });
   }
 
   /**
@@ -142,18 +136,22 @@ class Member extends Model {
         message: "An email is required to generate a token",
       });
 
-    const user = await this.findOne({ email }).exec();
+    const memberData = await Member.findOne({ where: { email: email } });
+    const member = memberData.dataValues;
     const err = {
       status: httpStatus.UNAUTHORIZED,
       isPublic: true,
     };
+
     if (password) {
-      if (user && (await Member.passwordMatches(password))) {
-        return { user, accessToken: user.token() };
+      if (member && (await this.passwordMatches(password, member.password))) {
+        const accessToken = await this.token();
+        return { member, accessToken: accessToken };
       }
+
       err.message = "Incorrect email or password";
-    } else if (refreshObject && refreshObject.userEmail === email) {
-      return { user, accessToken: user.token() };
+    } else if (refreshObject && refreshObject.member_email === email) {
+      return { member, accessToken: this.token() };
     } else {
       err.message = "Incorrect email or refreshToken";
     }
@@ -203,8 +201,8 @@ class Member extends Model {
   /**
    * Check if password already matches previous
    */
-  async passwordMatches(password) {
-    return bcrypt.compare(password, this.password);
+  async passwordMatches(password, foundPassword) {
+    return bcrypt.compare(password, foundPassword);
   }
 }
 
@@ -218,7 +216,6 @@ Member.init(
     student_id: {
       type: DataTypes.STRING,
       allowNull: true,
-      // unique: true,
       required: false,
     },
     first_name: {
@@ -234,12 +231,14 @@ Member.init(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
+      required: true,
       unique: true,
       is: /^\S+@\S+\.\S+$/i,
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
+      required: true,
     },
     year: {
       type: DataTypes.STRING,
@@ -326,6 +325,14 @@ Member.init(
     tableName: "members",
 
     comment: "Table contains all information on members",
+
+    // And deletedAt to be called destroyed_at (remember to enable paranoid for this to work)
+    deletedAt: "destroyed_at",
+
+    // don't delete database entries but set the newly added attribute deletedAt
+    // to the current date (when deletion was done). paranoid will only work if
+    // timestamps are enabled
+    paranoid: true,
 
     hooks: {
       /**
