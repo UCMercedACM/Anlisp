@@ -1,4 +1,4 @@
-# Anlisp
+# Half Dome
 
 ![Version 1.1.0 Badge][version-badge]][changelog] [![MIT License Badge][license-badge]][license]
 
